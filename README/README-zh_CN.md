@@ -1,91 +1,69 @@
 # Pingoo
 > 释义：这个名字听起来很可爱，而且有点像Goo（胶水）的意思，表示本Ping工具可以把三种协议粘在一起，很灵活，很方便。
+<hr>
+这是一个 跨平台 高效率 高性能 的 Ping 工具
+<hr>
+## 目录
 
-＃＃ 入门
+- [背景](#背景)
+- [安装](#安装)
+- [用法](#用法)
+- [相关项目（可选）](#相关项目)
+- [主要项目负责人](#主要项目负责人)
+- [参与贡献方式](#参与贡献方式)
+    - [贡献人员](#贡献人员)
+- [开源协议](#开源协议)
 
-为了让您轻松开始使用 GitLab，这里列出了建议的后续步骤。
+## 背景
 
-已经是专业人士了吗？ 只需编辑此 README.md 并使其成为您自己的即可。 想让事情变得简单吗？ [使用底部的模板](#editing-this-readme)！
+因为现在 Github 上的中国程序员越来越多，但是 Github 还是以英文为主导，对某些英语能力较弱的中国人不友好。所以，我根据 [@RichardLitt](https://github.com/RichardLitt) 主导的标准 README 项目 [RichardLitt/standard-readme](https://github.com/RichardLitt/standard-readme) 编写了中文版的标准 README 。
 
-## 添加你的文件
+## 安装
 
-- [ ] [创建](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) 或 [上传](https://docs.gitlab.com/ ee/user/project/repository/web_editor.html#upload-a-file) 文件
-- [ ] [使用命令行添加文件](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) 或推送 使用以下命令创建现有的 Git 存储库：
+[![](https://img.shields.io/badge/%E4%B8%8B%E8%BD%BD-README.md-orange)](README.md)
 
-````
-cd 现有的_repo
-git 远程添加原点 https://gitlab.com/WeddedMercury15/pingoo.git
-git分支-M主
-git push -uf 起源主要
-````
+Github 上的 README 一般是用 Markdown 编写的，所以后缀名是 .md 。所以你需要一个 Markdown 编辑器，我个人推荐使用 [Visual Studio Code](https://code.visualstudio.com/) 。
 
-## 与您的工具集成
+## 用法
 
-- [ ] [设置项目集成](https://gitlab.com/WeddedMercury15/pingoo/-/settings/integrations)
+你可以直接下载 [README.md](README.md) 文件或者用 git 克隆此工程。然后使用 [Visual Studio Code](https://code.visualstudio.com/) 等 Markdown 编辑器打开 [README.md](README.md) 文件，然后根据 [README.md](README.md) 的标准格式套用到你自己项目的 README 中。
 
-## 与您的团队合作
+使用 Markdown 语法编辑 README 。
+- [目录](#目录)下的项是一个项目的 README 一般需要包含的内容。
+- 在[背景](#背景)项下，说明该项目的开发背景，简要概述一下整个项目。
+- 在[安装](#安装)项下，说明整个项目的安装方法，尽量详细一点，如果篇幅过大可以另用其他文档描述。
+- 在[用法](#用法)项下，说明该项目的使用方法，尽量详细，如果篇幅过大也可以另用其他文档进行描述。
+- 在[相关项目](#相关项目)项下写明与该项目相关的其他项目，如果没有，可以不写。
+- 在[主要项目负责人](#主要项目负责人)项下，写明该项目由谁负责。
+- 在[参与贡献方式](#参与贡献方式)项下，说明如何参与贡献该项目。在[贡献人员](#贡献人员)项下，写明全部或者主要的贡献人员，以向他们表示感谢。
+- 在[开源协议](#开源协议)项下，写明该项目的开源协议。
 
-- [ ] [邀请团队成员和协作者](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [创建新的合并请求](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [自动关闭合并请求中的问题](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#looking-issues-automatically)
-- [ ] [启用合并请求批准](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [设置自动合并](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+除上述的之外，还可以根据自己的具体项目进行调整增添删减。也可以适当在 README 中加入徽章，例如本文件的开头的：
 
-## 测试和部署
+[![](https://img.shields.io/badge/%E4%B8%BB%E9%A1%B5-sunyctf%2FChineseREADME-orange)](https://github.com/sunyctf/ChineseREADME)
 
-使用 GitLab 中内置的持续集成。
+你可以在 [shields](https://shields.io) 中自己创作。
 
-- [ ] [GitLab CI/CD 入门](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [使用静态应用程序安全测试 (SAST) 分析代码中的已知漏洞](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [使用 Auto Deploy 部署到 Kubernetes、Amazon EC2 或 Amazon ECS](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [使用基于拉取的部署来改进 Kubernetes 管理](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [设置受保护环境](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+## 相关项目
 
-***
+暂无
 
-# 编辑此自述文件
+## 主要项目负责人
 
-当您准备好自己编写此自述文件时，只需编辑此文件并使用下面方便的模板（或者随意构建您想要的结构 - 这只是一个起点！）。 感谢 [makeareadme.com](https://www.makeareadme.com/) 提供此模板。
+[@Andy](https://github.com/sunyctf)
 
-## 关于良好自述文件的建议
-每个项目都是不同的，因此请考虑以下哪些部分适用于您的项目。 模板中使用的部分是针对大多数开源项目的建议。 另请记住，虽然自述文件可能太长太详细，但太长总比太短好。 如果您认为自述文件太长，请考虑使用另一种形式的文档，而不是删除信息。
+## 参与贡献方式
 
-＃＃ 姓名
-为您的项目选择一个不言自明的名称。
+[![](https://img.shields.io/badge/%E7%94%B3%E8%AF%B7-Pull%20Request-orange)](https://github.com/sunyctf/ChineseREADME/pulls)
 
-＃＃ 描述
-让人们知道您的项目具体可以做什么。 提供上下文并添加指向访问者可能不熟悉的任何参考的链接。 还可以在此处添加功能列表或背景小节。 如果您的项目有其他选择，那么这里是列出差异化因素的好地方。
+提交 [PR](https://github.com/sunyctf/ChineseREADME/pulls) 申请，我会视情况通过。
 
-## 徽章
-在某些自述文件中，您可能会看到传达元数据的小图像，例如项目的所有测试是否都通过。 您可以使用 Shields 将一些内容添加到您的自述文件中。 许多服务还提供了添加徽章的说明。
+### 贡献人员
 
-## 视觉效果
-根据您正在制作的内容，包含屏幕截图甚至视频可能是个好主意（您经常会看到 GIF 而不是实际视频）。 像 ttygif 这样的工具可以提供帮助，但请查看 Asciinema 以获取更复杂的方法。
+感谢所有贡献的人。
 
-＃＃ 安装
-在特定的生态系统中，可能有一种常见的安装方式，例如使用 Yarn、NuGet 或 Homebrew。 但是，请考虑阅读您的自述文件的人可能是新手，并且需要更多指导。 列出具体步骤有助于消除歧义并让人们尽快使用您的项目。 如果它仅在特定的上下文中运行，例如特定的编程语言版本或操作系统，或者具有必须手动安装的依赖项，还请添加“要求”小节。
+[@Andy](https://github.com/sunyctf)
 
-＃＃ 用法
-随意使用示例，并尽可能显示预期的输出。 内联您可以演示的最小用法示例会很有帮助，同时如果更复杂的示例太长而无法合理包含在自述文件中，则提供指向更复杂示例的链接。
+## 开源协议
 
-＃＃ 支持
-告诉人们可以去哪里寻求帮助。 它可以是问题跟踪器、聊天室、电子邮件地址等的任意组合。
-
-## 路线图
-如果您对将来的版本有想法，最好将它们列在自述文件中。
-
-## 贡献
-说明您是否愿意接受捐款以及接受捐款的要求是什么。
-
-对于想要更改项目的人来说，拥有一些有关如何开始的文档会很有帮助。 也许他们应该运行一个脚本或需要设置一些环境变量。 明确这些步骤。 这些说明也可能对未来的您有用。
-
-您还可以记录用于检查代码或运行测试的命令。 这些步骤有助于确保高代码质量并降低更改无意中破坏某些内容的可能性。 如果需要外部设置（例如启动 Selenium 服务器以在浏览器中进行测试），则拥有运行测试的说明尤其有用。
-
-## 作者和致谢
-对那些为该项目做出贡献的人表示感谢。
-
-＃＃ 执照
-对于开源项目，请说明其如何获得许可。
-
-## 项目状态
-如果您的项目已经耗尽精力或时间，请在自述文件顶部添加注释，说明开发已减慢或完全停止。 有人可能会选择分叉您的项目或自愿以维护者或所有者的身份介入，让您的项目继续进行。 您还可以向维护人员提出明确的请求。
+[MIT](LICENSE) © Andy
