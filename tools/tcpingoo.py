@@ -29,7 +29,7 @@ def tcping(domain, port, request_nums):
         resolved_hostname = cname
         ip = resolve_ip(cname)
         if ip is None:
-            print(f"无法解析主机名 {resolved_hostname}")
+            print(f"TCPing 请求找不到主机 {resolved_hostname}。请检查该名称，然后重试。")
             return
 
     if resolved_hostname is None:
