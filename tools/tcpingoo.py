@@ -9,34 +9,24 @@ def custom_gaierror(msg):
         def __init__(self, message):
             super().__init__(-1, message)
 
-    raise CustomGaiError(msg)
-
-def resolve_ip(hostname, dns_server=None):
+def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None):
     try:
-        if dns_server:
-            resolver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            resolver.settimeout(1)
-            resolver.connect((dns_server, 53))
-            # 使用 socket.getaddrinfo 进行 DNS 解析，支持 IPv6
-            addr_info = socket.getaddrinfo(hostname, None, socket.AF_INET6)
-            ip = addr_info[0][4][0]  # 获取IPv6地址
-            resolver.close()
-        else:
-            # 使用 socket.getaddrinfo 进行 DNS 解析，支持 IPv6
-            addr_info = socket.getaddrinfo(hostname, None, socket.AF_INET6)
-            ip = addr_info[0][4][0]  # 获取IPv6地址
-        return ip
-    except socket.gaierror:
-        raise ValueError(f"TCPing 请求找不到主机 {hostname}。请检查该名称，然后重试。")
-
-def tcping(domain, port, request_nums, dns_server=None):
-    try:
-        # 检查域名是否是IP地址
-        try:
-            ip = socket.inet_aton(domain)
-            ip = domain
-        except socket.error:
+        # 根据参数选择使用 IPv4 或 IPv6 进行解析和测试
+        if force_ipv4:
+            try:
+                ip = socket.inet_aton(domain)
+                ip = domain
+            except socket.error:
+                ip = resolve_ip(domain, dns_server)
+        elif force_ipv6:
             ip = resolve_ip(domain, dns_server)
+        else:
+            # 如果没有指定 -4 或 -6，则根据域名的 IP 类型自动选择
+            try:
+                ip = socket.inet_aton(domain)
+                ip = domain
+            except socket.error:
+                ip = resolve_ip(domain, dns_server)
 
     print(f"\n正在 TCPing {domain}:{port} 具有 32 字节的数据:")
 
@@ -124,10 +114,18 @@ def main():
     parser.add_argument("port", type=int, help="Target port number to TCPing.")
     parser.add_argument("-n", dest="request_nums", type=int, default=4, help="Number of requests to send (default: 4).")
     parser.add_argument("-d", dest="dns_server", type=str, help="Custom DNS server address for resolution.")
+    parser.add_argument("-4", dest="force_ipv4", action="store_true", help="Force using IPv4.")
+    parser.add_argument("-6", dest="force_ipv6", action="store_true", help="Force using IPv6.")
+    
+    # 通过添加互斥组，确保 -4 和 -6 参数互斥
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("-4", dest="force_ipv4", action="store_true", help="Force using IPv4.")
+    group.add_argument("-6", dest="force_ipv6", action="store_true", help="Force using IPv6.")
+
     args = parser.parse_args()
 
     try:
-        tcping(args.domain, args.port, args.request_nums, args.dns_server)
+        tcping(args.domain, args.port, args.request_nums, args.force_ipv4, args.force_ipv6, args.dns_server)
     except ValueError as e:
         print(e)
 
