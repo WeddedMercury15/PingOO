@@ -16,14 +16,15 @@ def resolve_ip(hostname, dns_server=None):
             resolver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             resolver.settimeout(1)
             resolver.connect((dns_server, 53))
-            ip = resolver.gethostbyname(hostname)
+            ip = socket.gethostbyname(hostname)  # 使用 socket.gethostbyname 进行 DNS 解析
             resolver.close()
         else:
-            ip = socket.gethostbyname(hostname)
+            ip = socket.gethostbyname(hostname)  # 使用 socket.gethostbyname 进行 DNS 解析
         return ip
     except socket.gaierror:
         raise ValueError(f"TCPing 请求找不到主机 {hostname}。请检查该名称，然后重试。")
 
+# 修改 tcping 函数中关于 IP 解析的部分
 def tcping(domain, port, request_nums, dns_server=None):
     try:
         # Check if the domain is an IP address
