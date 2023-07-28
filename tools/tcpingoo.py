@@ -92,7 +92,10 @@ def tcping(domain, port, request_nums):
 
 def print_help():
     print("""
-用法: python tcpingoo.py [地址:端口]
+用法: ping [-t] [-a] [-n count] [-l size] [-f] [-i TTL] [-v TOS]
+            [-r count] [-s count] [[-j host-list] | [-k host-list]]
+            [-w timeout] [-R] [-S srcaddr] [-c compartment] [-p]
+            [-4] [-6] [-d] target_name [port]
 
 选项:
     -h, --help     显示帮助信息
@@ -119,7 +122,9 @@ def print_help():
     -S srcaddr     要使用的源地址。
     -c compartment 路由隔离舱标识符。
     -p             Ping Hyper-V 网络虚拟化提供程序地址。
-    -4             仅使用 IPv4。
+    -4             强制使用 IPv4。
+    -6             强制使用 IPv6。
+    -d             自定义 DNS 服务器地址
     """)
 
 def main():
