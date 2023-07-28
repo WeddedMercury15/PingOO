@@ -10,47 +10,27 @@ def custom_gaierror(msg):
 
     raise CustomGaiError(msg)
 
-def resolve_ip(hostname):
+def resolve_ip(hostname, dns_server=None):
     try:
-        return socket.gethostbyname(hostname)
+        if dns_server:
+            resolver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            resolver.settimeout(1)
+            resolver.connect((dns_server, 53))
+            ip = resolver.gethostbyname(hostname)
+        else:
+            ip = socket.gethostbyname(hostname)
+        return ip
     except socket.gaierror:
         raise ValueError(f"TCPing 请求找不到主机 {hostname}。请检查该名称，然后重试。")
 
-def resolve_cname_with_nslookup(hostname):
-    try:
-        result = subprocess.run(["nslookup", hostname], capture_output=True, text=True)
-        output_lines = result.stdout.splitlines()
-        for line in output_lines:
-            if "名称" in line:
-                cname = line.split(":")[1].strip()
-                if cname != hostname:
-                    return cname
-    except subprocess.CalledProcessError:
-        pass
-    return None
+def tcping(domain, port, request_nums, dns_server=None):
+    ip = resolve_ip(domain, dns_server)
 
-def tcping(domain, port, request_nums):
-    resolved_hostname = None
-    cname = resolve_cname_with_nslookup(domain)
-    if cname is not None:
-        resolved_hostname = cname
-        ip = resolve_ip(cname)
-        if ip is None:
-            custom_gaierror(f"TCPing 请求找不到主机 {resolved_hostname}。请检查该名称，然后重试。")
-
-    if resolved_hostname is None:
-        hostname = f"{domain}:{port}"
-    else:
-        hostname = f"{resolved_hostname}:{port}"
-
-    ip = resolve_ip(domain)
-    if ip is not None:
-        print(f"\n正在 TCPing {hostname} [{ip}:{port}] 具有 32 字节的数据:")
-    else:
-        print(f"\n正在 TCPing {hostname} [{domain}:{port}] 具有 32 字节的数据:")
+    print(f"\n正在 TCPing {domain}:{port} [{ip}:{port}] 具有 32 字节的数据:")
 
     received_count = 0
     response_times = []
+
     try:
         for i in range(request_nums):
             start_time = time.time()
@@ -62,7 +42,7 @@ def tcping(domain, port, request_nums):
                     response_times.append(response_time)
                     print(f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL=64")
             except (socket.timeout, ConnectionRefusedError):
-                print(f"请求超时。")
+                print("请求超时。")
             
             if i < request_nums - 1:
                 time.sleep(1)  # 等待1秒后再发送下一个请求
@@ -81,7 +61,7 @@ def tcping(domain, port, request_nums):
         sys.exit(0)
 
     packet_loss_rate = ((request_nums - received_count) / request_nums) * 100
-    print("\n{0}:{1} 的 TCPing 统计信息:".format(ip, port))
+    print(f"\n{ip}:{port} 的 TCPing 统计信息:")
     print(f"    数据包: 已发送 = {received_count}，已接收 = {received_count}，丢失 = {0} (0.0% 丢失)")
     if received_count > 0:
         avg_delay = sum(response_times) / received_count
@@ -132,9 +112,26 @@ def main():
         print_help()
         return
 
-    address_port = sys.argv[1].split(':')
+    dns_server = None
+    args = sys.argv[1:]
+
+    # Check for custom DNS server using -d option
+    if '-d' in args:
+        try:
+            index = args.index('-d')
+            dns_server = args[index + 1]
+            args = args[:index] + args[index + 2:]
+        except IndexError:
+            print("未指定自定义DNS服务器。")
+            sys.exit(1)
+
+    if len(args) != 1:
+        print("请提供 '地址:端口' 的格式来指定主机和端口。")
+        sys.exit(1)
+
+    address_port = args[0].split(':')
     if len(address_port) != 2:
-        print("地址和端口格式不正确，请使用'地址:端口'的格式来指定。")
+        print("地址和端口格式不正确，请使用 '地址:端口' 的格式来指定。")
         sys.exit(1)
     ipAddress = address_port[0]
     port = int(address_port[1])
@@ -143,11 +140,7 @@ def main():
     request_nums = 4
 
     try:
-        domain = resolve_cname_with_nslookup(ipAddress)
-        if domain is not None:
-            tcping(domain, port, request_nums)
-        else:
-            tcping(ipAddress, port, request_nums)
+        tcping(ipAddress, port, request_nums, dns_server)
     except ValueError as e:
         print(e)
 
