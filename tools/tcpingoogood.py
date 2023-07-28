@@ -24,9 +24,14 @@ def resolve_ip(hostname, dns_server=None):
         raise ValueError(f"TCPing 请求找不到主机 {hostname}。请检查该名称，然后重试。")
 
 def tcping(domain, port, request_nums, dns_server=None):
-    ip = resolve_ip(domain, dns_server)
+    try:
+        # Check if the domain is an IP address
+        ip = socket.inet_aton(domain)
+        ip = domain
+    except socket.error:
+        ip = resolve_ip(domain, dns_server)
 
-    print(f"\n正在 TCPing {domain}:{port} [{ip}:{port}] 具有 32 字节的数据:")
+    print(f"\n正在 TCPing {domain}:{port} 具有 32 字节的数据:")
 
     received_count = 0
     response_times = []
