@@ -23,11 +23,14 @@ def resolve_ip(hostname, dns_server=None):
         return ip
     except socket.gaierror:
         raise ValueError(f"TCPing 请求找不到主机 {hostname}。请检查该名称，然后重试。")
-    except socket.error:
-        return hostname
 
 def tcping(domain, port, request_nums, dns_server=None):
-    ip = resolve_ip(domain, dns_server)
+    try:
+        # Check if the domain is an IP address
+        ip = socket.inet_aton(domain)
+        ip = domain
+    except socket.error:
+        ip = resolve_ip(domain, dns_server)
 
     print(f"\n正在 TCPing {domain}:{port} 具有 32 字节的数据:")
 
@@ -130,10 +133,19 @@ def main():
 
     # Extract the address and port from the arguments list
     if len(args) != 2:
-        print_help()
-        sys.exit(1)
-
-    ipAddress, port = args
+        # Find the domain and port in the arguments
+        for i, arg in enumerate(args):
+            if arg.isdigit():
+                ipAddress = args[i-1]
+                port = arg
+                break
+        else:
+            # If no valid domain and port are found, show help and exit
+            print_help()
+            sys.exit(1)
+    else:
+        # If there are exactly two arguments, assume they are in order
+        ipAddress, port = args
 
     # 发送4个TCPing请求
     request_nums = 4
