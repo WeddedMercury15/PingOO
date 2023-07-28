@@ -147,6 +147,10 @@ def main():
         # If there are exactly two arguments, assume they are in order
         ipAddress, port = args
 
+    # If the -d option is used, swap ipAddress and dns_server
+    if dns_server:
+        ipAddress, dns_server = dns_server, ipAddress
+
     # 发送4个TCPing请求
     request_nums = 4
 
