@@ -17,6 +17,7 @@ def resolve_ip(hostname, dns_server=None):
             resolver.settimeout(1)
             resolver.connect((dns_server, 53))
             ip = resolver.gethostbyname(hostname)
+            resolver.close()
         else:
             ip = socket.gethostbyname(hostname)
         return ip
