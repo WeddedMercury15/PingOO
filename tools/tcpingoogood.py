@@ -122,25 +122,20 @@ def main():
             dns_server = args[index + 1]
             args = args[:index] + args[index + 2:]
         except IndexError:
-            print("未指定自定义DNS服务器。")
+            print("未指定自定义 DNS 服务器。")
             sys.exit(1)
 
-    if len(args) != 1:
-        print("请提供 '地址:端口' 的格式来指定主机和端口。")
+    if len(args) != 2:
+        print("请提供 IP 地址和端口号。")
         sys.exit(1)
 
-    address_port = args[0].split(':')
-    if len(address_port) != 2:
-        print("地址和端口格式不正确，请使用 '地址:端口' 的格式来指定。")
-        sys.exit(1)
-    ipAddress = address_port[0]
-    port = int(address_port[1])
+    ipAddress, port = args
 
     # 发送4个TCPing请求
     request_nums = 4
 
     try:
-        tcping(ipAddress, port, request_nums, dns_server)
+        tcping(ipAddress, int(port), request_nums, dns_server)
     except ValueError as e:
         print(e)
 
