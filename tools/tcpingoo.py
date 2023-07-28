@@ -3,11 +3,18 @@ import socket
 import subprocess
 import time
 
+def custom_gaierror(msg):
+    class CustomGaiError(socket.gaierror):
+        def __init__(self, message):
+            super().__init__(-1, message)
+
+    raise CustomGaiError(msg)
+
 def resolve_ip(hostname):
     try:
         return socket.gethostbyname(hostname)
     except socket.gaierror:
-        return None
+        raise ValueError(f"TCPing 请求找不到主机 {hostname}。请检查该名称，然后重试。")
 
 def resolve_cname_with_nslookup(hostname):
     try:
@@ -29,8 +36,7 @@ def tcping(domain, port, request_nums):
         resolved_hostname = cname
         ip = resolve_ip(cname)
         if ip is None:
-            print(f"无法解析主机名 {resolved_hostname}")
-            return
+            custom_gaierror(f"TCPing 请求找不到主机 {resolved_hostname}。请检查该名称，然后重试。")
 
     if resolved_hostname is None:
         hostname = f"{domain}:{port}"
@@ -129,15 +135,18 @@ def main():
         sys.exit(1)
     ipAddress = address_port[0]
     port = int(address_port[1])
-    
+
     # 发送4个TCPing请求
     request_nums = 4
 
-    domain = resolve_cname_with_nslookup(ipAddress)
-    if domain is not None:
-        tcping(domain, port, request_nums)
-    else:
-        tcping(ipAddress, port, request_nums)
+    try:
+        domain = resolve_cname_with_nslookup(ipAddress)
+        if domain is not None:
+            tcping(domain, port, request_nums)
+        else:
+            tcping(ipAddress, port, request_nums)
+    except ValueError as e:
+        print(e)
 
 if __name__ == '__main__':
     main()
