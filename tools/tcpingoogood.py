@@ -132,15 +132,12 @@ def main():
             sys.exit(1)
 
     # Extract the address and port from the arguments list
-    if len(args) != 2:
-        for i, arg in enumerate(args):
-            if arg.isdigit():
-                ipAddress = args[i-1]
-                port = arg
-                break
-        else:
-            print_help()
-            sys.exit(1)
+    if len(args) != 3:
+        print_help()
+        sys.exit(1)
+
+    ipAddress = args[0]
+    port = args[2]
 
     # 发送4个TCPing请求
     request_nums = 4
