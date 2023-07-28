@@ -72,7 +72,7 @@ def tcping(domain, port, request_nums, dns_server=None):
 
 def print_help():
     print("""
-用法: ping [-t] [-a] [-n count] [-l size] [-f] [-i TTL] [-v TOS]
+用法: tcpingoo [-t] [-a] [-n count] [-l size] [-f] [-i TTL] [-v TOS]
             [-r count] [-s count] [[-j host-list] | [-k host-list]]
             [-w timeout] [-R] [-S srcaddr] [-c compartment] [-p]
             [-4] [-6] [-d] target_name [port]
