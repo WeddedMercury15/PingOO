@@ -16,17 +16,24 @@ def resolve_ip(hostname, dns_server=None):
             resolver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             resolver.settimeout(1)
             resolver.connect((dns_server, 53))
-            ip = resolver.gethostbyname(hostname)
+            ip = socket.gethostbyname(hostname)  # 使用 socket.gethostbyname 进行 DNS 解析
+            resolver.close()
         else:
-            ip = socket.gethostbyname(hostname)
+            ip = socket.gethostbyname(hostname)  # 使用 socket.gethostbyname 进行 DNS 解析
         return ip
     except socket.gaierror:
         raise ValueError(f"TCPing 请求找不到主机 {hostname}。请检查该名称，然后重试。")
 
+# 修改 tcping 函数中关于 IP 解析的部分
 def tcping(domain, port, request_nums, dns_server=None):
-    ip = resolve_ip(domain, dns_server)
+    try:
+        # Check if the domain is an IP address
+        ip = socket.inet_aton(domain)
+        ip = domain
+    except socket.error:
+        ip = resolve_ip(domain, dns_server)
 
-    print(f"\n正在 TCPing {domain}:{port} [{ip}:{port}] 具有 32 字节的数据:")
+    print(f"\n正在 TCPing {domain}:{port} 具有 32 字节的数据:")
 
     received_count = 0
     response_times = []
@@ -35,7 +42,7 @@ def tcping(domain, port, request_nums, dns_server=None):
         for i in range(request_nums):
             start_time = time.time()
             try:
-                with socket.create_connection((domain, port), timeout=1) as conn:
+                with socket.create_connection((ip, port), timeout=1) as conn:
                     end_time = time.time()
                     response_time = (end_time - start_time) * 1000  # 转换成毫秒
                     received_count += 1
@@ -120,27 +127,33 @@ def main():
         try:
             index = args.index('-d')
             dns_server = args[index + 1]
-            args = args[:index] + args[index + 2:]
+            args.pop(index)  # Remove '-d'
+            args.pop(index)  # Remove the DNS server address
         except IndexError:
-            print("未指定自定义DNS服务器。")
+            print("未指定自定义 DNS 服务器。")
             sys.exit(1)
 
-    if len(args) != 1:
-        print("请提供 '地址:端口' 的格式来指定主机和端口。")
-        sys.exit(1)
-
-    address_port = args[0].split(':')
-    if len(address_port) != 2:
-        print("地址和端口格式不正确，请使用 '地址:端口' 的格式来指定。")
-        sys.exit(1)
-    ipAddress = address_port[0]
-    port = int(address_port[1])
+    # Extract the address and port from the arguments list
+    if len(args) != 2:
+        # Find the domain and port in the arguments
+        for i, arg in enumerate(args):
+            if arg.isdigit():
+                port = arg
+                domain = args[i-1]
+                break
+        else:
+            # If no valid domain and port are found, show help and exit
+            print_help()
+            sys.exit(1)
+    else:
+        # If there are exactly two arguments, assume they are in order
+        domain, port = args
 
     # 发送4个TCPing请求
     request_nums = 4
 
     try:
-        tcping(ipAddress, port, request_nums, dns_server)
+        tcping(domain, int(port), request_nums, dns_server)
     except ValueError as e:
         print(e)
 
