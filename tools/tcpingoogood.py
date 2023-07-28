@@ -155,8 +155,6 @@ def main():
         tcping(domain, int(port), request_nums, dns_server)
     except ValueError as e:
         print(e)
-    except socket.gaierror:
-        print(f"TCPing 请求找不到主机 {domain}。请检查该名称，然后重试。")
 
 if __name__ == '__main__':
     main()
