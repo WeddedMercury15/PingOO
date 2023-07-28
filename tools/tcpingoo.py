@@ -2,6 +2,7 @@ import sys
 import socket
 import subprocess
 import time
+import argparse
 
 def custom_gaierror(msg):
     class CustomGaiError(socket.gaierror):
@@ -16,10 +17,14 @@ def resolve_ip(hostname, dns_server=None):
             resolver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             resolver.settimeout(1)
             resolver.connect((dns_server, 53))
-            ip = socket.gethostbyname(hostname)  # 使用 socket.gethostbyname 进行 DNS 解析
+            # 使用 socket.getaddrinfo 进行 DNS 解析
+            addr_info = socket.getaddrinfo(hostname, None)
+            ip = addr_info[0][4][0]  # 获取IPv6地址
             resolver.close()
         else:
-            ip = socket.gethostbyname(hostname)  # 使用 socket.gethostbyname 进行 DNS 解析
+            # 使用 socket.getaddrinfo 进行 DNS 解析
+            addr_info = socket.getaddrinfo(hostname, None)
+            ip = addr_info[0][4][0]  # 获取IPv6地址
         return ip
     except socket.gaierror:
         raise ValueError(f"TCPing 请求找不到主机 {hostname}。请检查该名称，然后重试。")
@@ -115,45 +120,16 @@ def print_help():
     """)
 
 def main():
-    if len(sys.argv) == 1 or sys.argv[1] in ['-h', '--help']:
-        print_help()
-        return
-
-    dns_server = None
-    args = sys.argv[1:]
-
-    # 使用 -d 选项检查自定义 DNS 服务器
-    if '-d' in args:
-        try:
-            index = args.index('-d')
-            dns_server = args[index + 1]
-            args.pop(index)  # Remove '-d'
-            args.pop(index)  # Remove the DNS server address
-        except IndexError:
-            print("未指定自定义 DNS 服务器。")
-            sys.exit(1)
-
-    # 从参数列表中提取地址和端口
-    if len(args) != 2:
-        # 查找参数中的域和端口
-        for i, arg in enumerate(args):
-            if arg.isdigit():
-                port = arg
-                domain = args[i-1]
-                break
-        else:
-            # 如果未找到有效的域和端口，则显示帮助并退出
-            print_help()
-            sys.exit(1)
-    else:
-        # 如果恰好有两个参数，则假设它们是按顺序排列的
-        domain, port = args
-
-    # 发送4个TCPing请求
-    request_nums = 4
+    # 使用argparse模块处理命令行参数
+    parser = argparse.ArgumentParser(description="TCPing - Test TCP connectivity to a host and port.")
+    parser.add_argument("domain", type=str, help="Target domain or IP address to TCPing.")
+    parser.add_argument("port", type=int, help="Target port number to TCPing.")
+    parser.add_argument("-n", dest="request_nums", type=int, default=4, help="Number of requests to send (default: 4).")
+    parser.add_argument("-d", dest="dns_server", type=str, help="Custom DNS server address for resolution.")
+    args = parser.parse_args()
 
     try:
-        tcping(domain, int(port), request_nums, dns_server)
+        tcping(args.domain, args.port, args.request_nums, args.dns_server)
     except ValueError as e:
         print(e)
 
