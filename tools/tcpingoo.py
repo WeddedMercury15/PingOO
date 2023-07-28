@@ -94,7 +94,7 @@ def tcping(domain, port, request_nums):
 
 def print_help():
     print("""
-用法: python tcping.py [地址:端口]
+用法: python tcpingoo.py [地址:端口]
 
 选项:
     -h, --help     显示帮助信息
