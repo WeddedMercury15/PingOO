@@ -90,7 +90,6 @@ def print_help():
             [-4] [-6] [-d] target_name [port]
 
 选项:
-    -h, --help     显示帮助信息
     -t             TCPing 指定的主机，直到停止。
                    若要查看统计信息并继续操作，请键入 Ctrl+Break；
                    若要停止，请键入 Ctrl+C。
