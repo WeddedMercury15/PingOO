@@ -137,8 +137,8 @@ def main():
         # Find the domain and port in the arguments
         for i, arg in enumerate(args):
             if arg.isdigit():
-                ipAddress = args[i-1]
                 port = arg
+                domain = args[i-1]
                 break
         else:
             # If no valid domain and port are found, show help and exit
@@ -146,13 +146,13 @@ def main():
             sys.exit(1)
     else:
         # If there are exactly two arguments, assume they are in order
-        ipAddress, port = args
+        domain, port = args
 
     # 发送4个TCPing请求
     request_nums = 4
 
     try:
-        tcping(ipAddress, int(port), request_nums, dns_server)
+        tcping(domain, int(port), request_nums, dns_server)
     except ValueError as e:
         print(e)
 
