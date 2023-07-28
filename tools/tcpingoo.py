@@ -29,7 +29,7 @@ def tcping(domain, port, request_nums):
         resolved_hostname = cname
         ip = resolve_ip(cname)
         if ip is None:
-            print(f"TCPing 请求找不到主机 {resolved_hostname}。请检查该名称，然后重试。")
+            print(f"无法解析主机名 {resolved_hostname}")
             return
 
     if resolved_hostname is None:
@@ -61,18 +61,6 @@ def tcping(domain, port, request_nums):
             if i < request_nums - 1:
                 time.sleep(1)  # 等待1秒后再发送下一个请求
 
-        packet_loss_rate = ((request_nums - received_count) / request_nums) * 100
-        print("\n{0}:{1} 的 TCPing 统计信息:".format(ip, port))
-        print(f"    数据包: 已发送 = {received_count}，已接收 = {received_count}，丢失 = {0} (0.0% 丢失)")
-        if received_count > 0:
-            avg_delay = sum(response_times) / received_count
-            min_delay = min(response_times)
-            max_delay = max(response_times)
-            print("往返行程的估计时间(以毫秒为单位):")
-            print(f"    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms")
-
-        print()
-
     except KeyboardInterrupt:
         if received_count > 0:
             print(f"\n{ip}:{port} 的 TCPing 统计信息:")
@@ -85,6 +73,18 @@ def tcping(domain, port, request_nums):
             print(f"    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms")
         print("\nControl-C")
         sys.exit(0)
+
+    packet_loss_rate = ((request_nums - received_count) / request_nums) * 100
+    print("\n{0}:{1} 的 TCPing 统计信息:".format(ip, port))
+    print(f"    数据包: 已发送 = {received_count}，已接收 = {received_count}，丢失 = {0} (0.0% 丢失)")
+    if received_count > 0:
+        avg_delay = sum(response_times) / received_count
+        min_delay = min(response_times)
+        max_delay = max(response_times)
+        print("往返行程的估计时间(以毫秒为单位):")
+        print(f"    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms")
+
+    print()
 
 def print_help():
     print("""
@@ -127,17 +127,17 @@ def main():
     if len(address_port) != 2:
         print("地址和端口格式不正确，请使用'地址:端口'的格式来指定。")
         sys.exit(1)
-    ip = address_port[0]
+    ipAddress = address_port[0]
     port = int(address_port[1])
     
     # 发送4个TCPing请求
     request_nums = 4
 
-    domain = resolve_cname_with_nslookup(ip)
+    domain = resolve_cname_with_nslookup(ipAddress)
     if domain is not None:
         tcping(domain, port, request_nums)
     else:
-        tcping(ip, port, request_nums)
+        tcping(ipAddress, port, request_nums)
 
 if __name__ == '__main__':
     main()
