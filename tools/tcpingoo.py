@@ -27,7 +27,7 @@ def resolve_ip(hostname, dns_server=None):
 # 修改 tcping 函数中关于 IP 解析的部分
 def tcping(domain, port, request_nums, dns_server=None):
     try:
-        # Check if the domain is an IP address
+        # 检查域名是否是IP地址
         ip = socket.inet_aton(domain)
         ip = domain
     except socket.error:
@@ -122,7 +122,7 @@ def main():
     dns_server = None
     args = sys.argv[1:]
 
-    # Check for custom DNS server using -d option
+    # 使用 -d 选项检查自定义 DNS 服务器
     if '-d' in args:
         try:
             index = args.index('-d')
@@ -133,20 +133,20 @@ def main():
             print("未指定自定义 DNS 服务器。")
             sys.exit(1)
 
-    # Extract the address and port from the arguments list
+    # 从参数列表中提取地址和端口
     if len(args) != 2:
-        # Find the domain and port in the arguments
+        # 查找参数中的域和端口
         for i, arg in enumerate(args):
             if arg.isdigit():
                 port = arg
                 domain = args[i-1]
                 break
         else:
-            # If no valid domain and port are found, show help and exit
+            # 如果未找到有效的域和端口，则显示帮助并退出
             print_help()
             sys.exit(1)
     else:
-        # If there are exactly two arguments, assume they are in order
+        # 如果恰好有两个参数，则假设它们是按顺序排列的
         domain, port = args
 
     # 发送4个TCPing请求
