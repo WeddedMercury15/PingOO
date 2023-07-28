@@ -126,7 +126,7 @@ def main():
             sys.exit(1)
 
     if len(args) != 2:
-        print("请提供 IP 地址和端口号。")
+        print_help()
         sys.exit(1)
 
     ipAddress, port = args
