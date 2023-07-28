@@ -41,7 +41,7 @@ def tcping(domain, port, request_nums, dns_server=None):
         for i in range(request_nums):
             start_time = time.time()
             try:
-                with socket.create_connection((domain, port), timeout=1) as conn:
+                with socket.create_connection((ip, port), timeout=1) as conn:
                     end_time = time.time()
                     response_time = (end_time - start_time) * 1000  # 转换成毫秒
                     received_count += 1
@@ -131,11 +131,16 @@ def main():
             print("未指定自定义 DNS 服务器。")
             sys.exit(1)
 
+    # Extract the address and port from the arguments list
     if len(args) != 2:
-        print_help()
-        sys.exit(1)
-
-    ipAddress, port = args
+        for i, arg in enumerate(args):
+            if arg.isdigit():
+                ipAddress = args[i-1]
+                port = arg
+                break
+        else:
+            print_help()
+            sys.exit(1)
 
     # 发送4个TCPing请求
     request_nums = 4
