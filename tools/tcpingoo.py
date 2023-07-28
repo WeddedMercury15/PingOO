@@ -17,26 +17,26 @@ def resolve_ip(hostname, dns_server=None):
             resolver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             resolver.settimeout(1)
             resolver.connect((dns_server, 53))
-            # 使用 socket.getaddrinfo 进行 DNS 解析
-            addr_info = socket.getaddrinfo(hostname, None)
+            # 使用 socket.getaddrinfo 进行 DNS 解析，支持 IPv6
+            addr_info = socket.getaddrinfo(hostname, None, socket.AF_INET6)
             ip = addr_info[0][4][0]  # 获取IPv6地址
             resolver.close()
         else:
-            # 使用 socket.getaddrinfo 进行 DNS 解析
-            addr_info = socket.getaddrinfo(hostname, None)
+            # 使用 socket.getaddrinfo 进行 DNS 解析，支持 IPv6
+            addr_info = socket.getaddrinfo(hostname, None, socket.AF_INET6)
             ip = addr_info[0][4][0]  # 获取IPv6地址
         return ip
     except socket.gaierror:
         raise ValueError(f"TCPing 请求找不到主机 {hostname}。请检查该名称，然后重试。")
 
-# 修改 tcping 函数中关于 IP 解析的部分
 def tcping(domain, port, request_nums, dns_server=None):
     try:
         # 检查域名是否是IP地址
-        ip = socket.inet_aton(domain)
-        ip = domain
-    except socket.error:
-        ip = resolve_ip(domain, dns_server)
+        try:
+            ip = socket.inet_aton(domain)
+            ip = domain
+        except socket.error:
+            ip = resolve_ip(domain, dns_server)
 
     print(f"\n正在 TCPing {domain}:{port} 具有 32 字节的数据:")
 
