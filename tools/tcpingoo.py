@@ -77,7 +77,7 @@ def tcping(domain, port, request_nums):
             max_delay = max(response_times)
             print("往返行程的估计时间(以毫秒为单位):")
             print(f"    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms")
-        print("\nControl-C")
+        print("Control-C")
         sys.exit(0)
 
     packet_loss_rate = ((request_nums - received_count) / request_nums) * 100
@@ -89,8 +89,6 @@ def tcping(domain, port, request_nums):
         max_delay = max(response_times)
         print("往返行程的估计时间(以毫秒为单位):")
         print(f"    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms")
-
-    print()
 
 def print_help():
     print("""

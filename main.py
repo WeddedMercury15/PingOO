@@ -42,7 +42,7 @@ def demo(screen, scene):
 
 while True:
     try:
-        Screen.wrapper(demo)
+        Screen.wrapper(lambda screen: demo(screen, None))
         sys.exit(0)
     except ResizeScreenError:
         pass
