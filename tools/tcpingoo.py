@@ -66,80 +66,80 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, 
 
         received_count = 0
         response_times = []
+        total_sent = 0  # Track total packets sent, including both successful responses and timeouts
 
         try:
-            while continuous_ping or request_nums > 0:
-                # 当 continuous_ping 为 True 或 request_nums 大于 0 时执行循环
+            while continuous_ping or total_sent < request_nums:
                 start_time = time.time()
                 try:
                     with socket.create_connection((ip, port), timeout=timeout / 1000) as conn:
                         end_time = time.time()
-                        response_time = (end_time - start_time) * 1000  # 转换成毫秒
+                        response_time = (end_time - start_time) * 1000  # Convert to milliseconds
                         received_count += 1
                         response_times.append(response_time)
                         print(f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL=64")
+                        total_sent += 1  # Increment total_sent for each ping attempt
                         if not continuous_ping:
-                            request_nums -= 1
-                        time.sleep(1)  # 请求成功后等待1秒再发送下一个请求
+                            break  # Exit loop after sending one successful ping
+                        time.sleep(1)  # Wait 1 second before sending the next request
                 except socket.timeout:
                     print("请求超时。")
+                    total_sent += 1  # Increment total_sent for each ping attempt, including timeouts
                     if not continuous_ping:
-                        request_nums -= 1
-                    time.sleep(1)  # 请求失败后等待1秒再发送下一个请求
+                        break  # Exit loop after sending one unsuccessful ping
+                    time.sleep(1)  # Wait 1 second before sending the next request
                 except (OSError, ConnectionRefusedError) as e:
                     if isinstance(e, OSError) and e.errno == 10049:
                         print("请求超时。")
+                        total_sent += 1  # Increment total_sent for each ping attempt, including timeouts
                         if not continuous_ping:
-                            request_nums -= 1
-                        time.sleep(1)  # 请求失败后等待1秒再发送下一个请求
+                            break  # Exit loop after sending one unsuccessful ping
+                        time.sleep(1)  # Wait 1 second before sending the next request
                     else:
                         print(f"无法连接到 {ip}:{port}。")
-                        # 请求失败时，设置丢失的请求数，用于正确计算丢包率
-                        received_count += 1
+                        received_count += 1  # Count connection errors as received (to include them in statistics)
                         response_times.append(0)
+                        total_sent += 1  # Increment total_sent for each ping attempt, including connection errors
                         if not continuous_ping:
-                            request_nums -= 1
-                        time.sleep(1)  # 请求失败后等待1秒再发送下一个请求
+                            break  # Exit loop after sending one unsuccessful ping
+                        time.sleep(1)  # Wait 1 second before sending the next request
 
         except KeyboardInterrupt:
-            if received_count > 0:
-                print(f"\n{ip}:{port} 的 TCPing 统计信息:")
-                if continuous_ping:
-                    total_sent = len(response_times)
-                    received_count = total_sent
-                if received_count > 0:
-                    packet_loss_rate = ((received_count - len(response_times)) / received_count) * 100
-                    print(f"    数据包: 已发送 = {len(response_times)}，已接收 = {received_count}，丢失 = {packet_loss_rate:.1f}% 丢失")
-                    avg_delay = sum(response_times) / received_count
-                    min_delay = min(response_times)
-                    max_delay = max(response_times)
-                    print("往返行程的估计时间(以毫秒为单位):")
-                    print(f"    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms")
-                else:
-                    print("    数据包: 已发送 = {len(response_times)}，已接收 = {received_count}，丢失 = 100.0% 丢失")
-                    print("往返行程的估计时间(以毫秒为单位):")
-                    print("    请求全部超时，无法计算往返行程时间。")
-            print("TCPing 已停止。")
-            sys.exit(0)
+            pass
 
-        if not continuous_ping:
+        if continuous_ping:
+            received_count = len(response_times)
+            total_sent = received_count
+
+        if total_sent > 0:
+            packet_loss_rate = ((total_sent - received_count) / total_sent) * 100
+        else:
+            packet_loss_rate = 100.0
+
+        print(f"\n{ip}:{port} 的 TCPing 统计信息:")
+        print(f"    数据包: 已发送 = {total_sent}，已接收 = {received_count}，丢失 = {packet_loss_rate:.1f}% 丢失")
+
+        if received_count > 0:
             if received_count > 0:
                 packet_loss_rate = ((request_nums - received_count) / request_nums) * 100
                 print(f"\n{ip}:{port} 的 TCPing 统计信息:")
                 print(f"    数据包: 已发送 = {request_nums}，已接收 = {received_count}，丢失 = {packet_loss_rate:.1f}% 丢失")
-                avg_delay = sum(response_times) / received_count
-                min_delay = min(response_times)
-                max_delay = max(response_times)
-                print("往返行程的估计时间(以毫秒为单位):")
-                print(f"    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms")
-            else:
+        if received_count > 0:
+                packet_loss_rate = ((request_nums - received_count) / request_nums) * 100
                 print(f"\n{ip}:{port} 的 TCPing 统计信息:")
-                print(f"    数据包: 已发送 = {request_nums}，已接收 = {received_count}，丢失 = 100.0% 丢失")
-                print("往返行程的估计时间(以毫秒为单位):")
-                print("    请求全部超时，无法计算往返行程时间。")
+                print(f"    数据包: 已发送 = {request_nums}，已接收 = {received_count}，丢失 = {packet_loss_rate:.1f}% 丢失")
+        avg_delay = sum(response_times) / received_count
+        min_delay = min(response_times)
+        max_delay = max(response_times)
+        print("往返行程的估计时间(以毫秒为单位):")
+        print(f"    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms")
+        else:
+        print("往返行程的估计时间(以毫秒为单位):")
+        print("    请求全部超时，无法计算往返行程时间。")
 
     except ValueError as e:
         print(e)
+
 
 def print_help():
     print("""
