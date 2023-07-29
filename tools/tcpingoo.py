@@ -11,6 +11,27 @@ def custom_gaierror(msg):
         def __init__(self, message):
             super().__init__(-1, message)
 
+    raise CustomGaiError(msg)
+
+def resolve_ip(hostname, dns_server=None):
+    try:
+        if dns_server:
+            resolver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            resolver.settimeout(1)
+            resolver.connect((dns_server, 53))
+            # 使用 socket.getaddrinfo 进行 DNS 解析，支持 IPv6
+            addr_info = socket.getaddrinfo(hostname, None, socket.AF_INET6)
+            ip = addr_info[0][4][0]  # 获取IPv6地址
+            resolver.close()
+        else:
+            # 使用 socket.getaddrinfo 进行 DNS 解析，支持 IPv6
+            addr_info = socket.getaddrinfo(hostname, None, socket.AF_INET6)
+            ip = addr_info[0][4][0]  # 获取IPv6地址
+        return ip
+    except socket.gaierror:
+        raise ValueError(f"TCPing 请求找不到主机 {hostname}。请检查该名称，然后重试。")
+
+
 def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None):
     try:
         # 根据参数选择使用 IPv4 或 IPv6 进行解析和测试
@@ -30,49 +51,52 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None):
             except socket.error:
                 ip = resolve_ip(domain, dns_server)
 
-    print("\n正在 TCPing {}:{} 具有 32 字节的数据:".format(domain, port))
+        print("\n正在 TCPing {}:{} 具有 32 字节的数据:".format(domain, port))
 
-    received_count = 0
-    response_times = []
+        received_count = 0
+        response_times = []
 
-    try:
-        for i in range(request_nums):
-            start_time = time.time()
-            try:
-                with socket.create_connection((ip, port), timeout=1) as conn:
-                    end_time = time.time()
-                    response_time = (end_time - start_time) * 1000  # 转换成毫秒
-                    received_count += 1
-                    response_times.append(response_time)
-                    print(f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL=64")
-            except (socket.timeout, ConnectionRefusedError):
-                print("请求超时。")
-            
-            if i < request_nums - 1:
-                time.sleep(1)  # 等待1秒后再发送下一个请求
+        try:
+            for i in range(request_nums):
+                start_time = time.time()
+                try:
+                    with socket.create_connection((ip, port), timeout=1) as conn:
+                        end_time = time.time()
+                        response_time = (end_time - start_time) * 1000  # 转换成毫秒
+                        received_count += 1
+                        response_times.append(response_time)
+                        print("来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL=64")
+                except (socket.timeout, ConnectionRefusedError):
+                    print("请求超时。")
+                
+                if i < request_nums - 1:
+                    time.sleep(1)  # 等待1秒后再发送下一个请求
 
-    except KeyboardInterrupt:
+        except KeyboardInterrupt:
+            if received_count > 0:
+                print("\n{ip}:{port} 的 TCPing 统计信息:")
+                packet_loss_rate = ((request_nums - received_count) / request_nums) * 100
+                print("    数据包: 已发送 = {received_count}，已接收 = {received_count}，丢失 = {0} (0.0% 丢失)")
+                avg_delay = sum(response_times) / received_count
+                min_delay = min(response_times)
+                max_delay = max(response_times)
+                print("往返行程的估计时间(以毫秒为单位):")
+                print("    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms")
+            print("Control-C")
+            sys.exit(0)
+
+        packet_loss_rate = ((request_nums - received_count) / request_nums) * 100
+        print("\n{ip}:{port} 的 TCPing 统计信息:")
+        print("    数据包: 已发送 = {received_count}，已接收 = {received_count}，丢失 = {0} (0.0% 丢失)")
         if received_count > 0:
-            print(f"\n{ip}:{port} 的 TCPing 统计信息:")
-            packet_loss_rate = ((request_nums - received_count) / request_nums) * 100
-            print(f"    数据包: 已发送 = {received_count}，已接收 = {received_count}，丢失 = {0} (0.0% 丢失)")
             avg_delay = sum(response_times) / received_count
             min_delay = min(response_times)
             max_delay = max(response_times)
             print("往返行程的估计时间(以毫秒为单位):")
-            print(f"    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms")
-        print("Control-C")
-        sys.exit(0)
+            print("    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms")
 
-    packet_loss_rate = ((request_nums - received_count) / request_nums) * 100
-    print(f"\n{ip}:{port} 的 TCPing 统计信息:")
-    print(f"    数据包: 已发送 = {received_count}，已接收 = {received_count}，丢失 = {0} (0.0% 丢失)")
-    if received_count > 0:
-        avg_delay = sum(response_times) / received_count
-        min_delay = min(response_times)
-        max_delay = max(response_times)
-        print("往返行程的估计时间(以毫秒为单位):")
-        print(f"    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms")
+    except ValueError as e:
+        print(e)
 
 def print_help():
     print("""
