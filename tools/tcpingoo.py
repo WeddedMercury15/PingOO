@@ -68,10 +68,12 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None):
                     print("请求超时。")
                 except (OSError, ConnectionRefusedError) as e:
                     if isinstance(e, OSError) and e.errno == 10049:
-                        print(f"无法解析地址 {ip}:{port}。")
+                        print("请求超时。")
+                        time.sleep(1)  # Wait for 1 second before retrying the request
+                        continue  # Continue to the next iteration
                     else:
                         print(f"无法连接到 {ip}:{port}。")
-                    break  # Exit the loop when a connection error occurs
+                        break  # Exit the loop when a connection error occurs
                 
                 if i < request_nums - 1:
                     time.sleep(1)  # Wait for 1 second before sending the next request
