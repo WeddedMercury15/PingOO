@@ -2,6 +2,7 @@ import sys
 import socket
 import time
 import argparse
+import dns.resolver
 
 def custom_gaierror(msg):
     class CustomGaiError(socket.gaierror):
@@ -13,28 +14,14 @@ def custom_gaierror(msg):
 def resolve_ip(hostname, dns_server=None, force_ipv4=False):
     try:
         if dns_server:
-            # Create a custom resolver with the specified DNS server
-            resolver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            resolver.settimeout(1)
-
-            # Prepare a DNS query for the hostname
-            query = b"\x00\x00\x01\x00\x01\x00\x00\x00\x00\x00\x00"
-            for part in hostname.split("."):
-                query += bytes([len(part)]) + part.encode()
-            query += b"\x00\x00\x01\x00\x01"
-
-            # Send the DNS query to the custom resolver
-            resolver.sendto(query, (dns_server, 53))
-
-            # Receive the DNS response
-            response, _ = resolver.recvfrom(1024)
-
-            # Parse the IP address from the DNS response
-            ip = socket.inet_ntoa(response[-4:])
-
-            resolver.close()
+            resolver = dns.resolver.Resolver()
+            resolver.nameservers = [dns_server]
+            answer = resolver.query(hostname, "A" if force_ipv4 else "AAAA", raise_on_no_answer=False)
+            if answer.rrset is not None:
+                ip = str(answer.rrset[0])
+            else:
+                raise TimeoutError("DNS query to custom server timed out.")
         else:
-            # If no custom DNS server is provided, use the system's default resolver
             family = socket.AF_INET6 if not force_ipv4 else socket.AF_INET
             addr_info = socket.getaddrinfo(hostname, None, family)
             ip = addr_info[0][4][0]  # Get the IP address
