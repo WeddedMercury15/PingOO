@@ -13,38 +13,54 @@ def custom_gaierror(msg):
 
     raise CustomGaiError(msg)
 
-def resolve_ip(hostname, dns_server=None):
+def resolve_ip(hostname, dns_server=None, force_ipv4=False):
     try:
         if dns_server:
             resolver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             resolver.settimeout(1)
             resolver.connect((dns_server, 53))
-            addr_info = socket.getaddrinfo(hostname, None, socket.AF_INET)  # Use AF_INET for IPv4
-            ip = addr_info[0][4][0]
+            addr_info = socket.getaddrinfo(hostname, None, socket.AF_INET6)
+            ip = addr_info[0][4][0]  # Get the IPv6 address
             resolver.close()
+        elif force_ipv4:
+            # Use socket.getaddrinfo for DNS resolution, supporting IPv4
+            addr_info = socket.getaddrinfo(hostname, None, socket.AF_INET)
+            ip = addr_info[0][4][0]  # Get IPv4 address
         else:
-            addr_info = socket.getaddrinfo(hostname, None, socket.AF_INET)  # Use AF_INET for IPv4
-            ip = addr_info[0][4][0]
+            # Try to resolve using IPv4
+            try:
+                addr_info = socket.getaddrinfo(hostname, None, socket.AF_INET)
+                ip = addr_info[0][4][0]  # Get IPv4 address
+            except socket.gaierror:
+                # If IPv4 resolution fails, try using IPv6
+                addr_info = socket.getaddrinfo(hostname, None, socket.AF_INET6)
+                ip = addr_info[0][4][0]  # Get the IPv6 address
         return ip
     except socket.gaierror:
         raise ValueError(f"TCPing 请求找不到主机 {hostname}。请检查该名称，然后重试。")
-
 
 def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None):
     try:
         ip = None
 
         if dns_server:
-            # Custom DNS server specified, use it for resolution
             resolver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             resolver.settimeout(1)
             resolver.connect((dns_server, 53))
             addr_info = socket.getaddrinfo(domain, None, socket.AF_INET6)
             ip = addr_info[0][4][0]  # Get the IPv6 address
             resolver.close()
+        elif force_ipv4:
+            ip = resolve_ip(domain, dns_server, force_ipv4=True)
+        elif force_ipv6:
+            ip = resolve_ip(domain, dns_server, force_ipv4=False)
         else:
-            addr_info = socket.getaddrinfo(domain, None, socket.AF_INET6)
-            ip = addr_info[0][4][0]  # Get the IPv6 address
+            try:
+                # Try to resolve using IPv4
+                ip = resolve_ip(domain, dns_server, force_ipv4=True)
+            except ValueError:
+                # If IPv4 resolution fails, try using IPv6
+                ip = resolve_ip(domain, dns_server, force_ipv4=False)
 
         print("\n正在 TCPing {}:{} 具有 32 字节的数据:".format(domain, port))
 
