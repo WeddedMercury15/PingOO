@@ -30,7 +30,7 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None):
             except socket.error:
                 ip = resolve_ip(domain, dns_server)
 
-    print("\n正在 TCPing {}:{} 具有 32 字节的数据:".format(domain, port))
+    print(f"\n正在 TCPing {domain}:{port} 具有 32 字节的数据:")
 
     received_count = 0
     response_times = []
@@ -116,6 +116,8 @@ def main():
     parser.add_argument("port", type=int, help="Target port number to TCPing.")
     parser.add_argument("-n", dest="request_nums", type=int, default=4, help="Number of requests to send (default: 4).")
     parser.add_argument("-d", dest="dns_server", type=str, help="Custom DNS server address for resolution.")
+    parser.add_argument("-4", dest="force_ipv4", action="store_true", help="Force using IPv4.")
+    parser.add_argument("-6", dest="force_ipv6", action="store_true", help="Force using IPv6.")
     
     # 通过添加互斥组，确保 -4 和 -6 参数互斥
     group = parser.add_mutually_exclusive_group()
