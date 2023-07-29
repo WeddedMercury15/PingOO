@@ -13,10 +13,19 @@ def custom_gaierror(msg):
 def resolve_ip(hostname, dns_server=None, force_ipv4=False):
     try:
         if dns_server:
-            # Use the custom DNS server for resolution
+            # Create a custom resolver with the specified DNS server
+            resolver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            resolver.settimeout(1)
+
+            # Set the custom DNS server for the resolver
+            resolver.connect((dns_server, 53))
+
+            # Use the custom resolver to get address info
             family = socket.AF_INET6 if not force_ipv4 else socket.AF_INET
-            addr_info = socket.getaddrinfo(hostname, None, family, socket.SOCK_STREAM, 0, socket.AI_ADDRCONFIG, None, (dns_server, 0))
+            addr_info = socket.getaddrinfo(hostname, None, family, socket.SOCK_STREAM)
             ip = addr_info[0][4][0]  # Get the IP address
+
+            resolver.close()
         else:
             # If no custom DNS server is provided, use the system's default resolver
             family = socket.AF_INET6 if not force_ipv4 else socket.AF_INET
@@ -26,7 +35,7 @@ def resolve_ip(hostname, dns_server=None, force_ipv4=False):
         return ip
 
     except socket.gaierror:
-        raise ValueError(f"TCPing 请求找不到主机 {hostname}。请检查该名称，然后重试。")
+        raise ValueError(f"TCPing 请求找不到主机 {hostname}。请检查该名称，然后重试.")
 
 def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, timeout=1000):
     try:
