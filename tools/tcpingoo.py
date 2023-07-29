@@ -72,31 +72,31 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, 
             response_times = []
 
             try:
-                while True:  # Loop until stopped manually
-                    if received_count >= request_nums:
+                while True:  # 现在将循环条件设置为True，使得-t参数可以无限循环
+                    if request_nums > 0 and received_count >= request_nums:
                         break
 
                     start_time = time.time()
                     try:
                         with socket.create_connection((ip, port), timeout=timeout / 1000) as conn:
                             end_time = time.time()
-                            response_time = (end_time - start_time) * 1000  # Convert to milliseconds
+                            response_time = (end_time - start_time) * 1000  # 转换为毫秒
                             received_count += 1
                             response_times.append(response_time)
                             print(f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL=64")
                             time.sleep(1)
                     except socket.timeout:
                         print("请求超时。")
-                        response_times.append(0)  # Packet is lost, add a placeholder for response_time
+                        response_times.append(0)  # 数据包丢失，添加一个占位符的响应时间
                         time.sleep(1)
                     except (OSError, ConnectionRefusedError) as e:
                         if isinstance(e, OSError) and e.errno == 10049:
                             print("请求超时。")
-                            response_times.append(0)  # Packet is lost, add a placeholder for response_time
+                            response_times.append(0)  # 数据包丢失，添加一个占位符的响应时间
                             time.sleep(1)
                         else:
                             print(f"无法连接到 {ip}:{port}。")
-                            response_times.append(0)  # Packet is lost, add a placeholder for response_time
+                            response_times.append(0)  # 数据包丢失，添加一个占位符的响应时间
                             time.sleep(1)
 
             except KeyboardInterrupt:
@@ -121,7 +121,7 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, 
 
             received_count = 0
             response_times = []
-            total_sent = 0
+            total_sent = 0  # Initialize total_sent to track the actual number of packets sent
 
             try:
                 while total_sent < request_nums:
@@ -133,22 +133,18 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, 
                             received_count += 1
                             response_times.append(response_time)
                             print(f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL=64")
-                            total_sent += 1
+                            total_sent += 1  # Increment total_sent only when a packet is sent
                             time.sleep(1)
                     except socket.timeout:
                         print("请求超时。")
-                        total_sent += 1
                         time.sleep(1)
                     except (OSError, ConnectionRefusedError) as e:
                         if isinstance(e, OSError) and e.errno == 10049:
                             print("请求超时。")
-                            total_sent += 1
                             time.sleep(1)
                         else:
                             print(f"无法连接到 {ip}:{port}。")
-                            received_count += 1
-                            response_times.append(0)
-                            total_sent += 1
+                            total_sent += 1  # Increment total_sent even if the packet is lost
                             time.sleep(1)
 
             except KeyboardInterrupt:
