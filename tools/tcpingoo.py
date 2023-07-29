@@ -104,7 +104,10 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, 
         except KeyboardInterrupt:
             if received_count > 0:
                 print(f"\n{ip}:{port} 的 TCPing 统计信息:")
-                packet_loss_rate = ((len(response_times) - received_count) / len(response_times)) * 100
+                if continuous_ping:
+                    total_sent = len(response_times)
+                    received_count = total_sent
+                packet_loss_rate = ((received_count - len(response_times)) / received_count) * 100
                 print(f"    数据包: 已发送 = {len(response_times)}，已接收 = {received_count}，丢失 = {packet_loss_rate:.1f}% 丢失")
                 if received_count > 0:
                     avg_delay = sum(response_times) / received_count
