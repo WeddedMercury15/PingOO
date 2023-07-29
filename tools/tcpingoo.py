@@ -39,7 +39,7 @@ def resolve_ip(hostname, dns_server=None, force_ipv4=False):
     except socket.gaierror:
         raise ValueError(f"TCPing 请求找不到主机 {hostname}。请检查该名称，然后重试。")
 
-def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, timeout=1000):
+def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, timeout=1000, continuous_ping=False):
     try:
         ip = None
 
@@ -68,7 +68,8 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, 
         response_times = []
 
         try:
-            for i in range(request_nums):
+            while continuous_ping or request_nums > 0:
+                # 当 continuous_ping 为 True 或 request_nums 大于 0 时执行循环
                 start_time = time.time()
                 try:
                     with socket.create_connection((ip, port), timeout=timeout / 1000) as conn:
@@ -77,41 +78,41 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, 
                         received_count += 1
                         response_times.append(response_time)
                         print(f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL=64")
-                        if i == request_nums - 1:
-                            break  # 最后一个请求完成后立即返回统计信息
+                        if not continuous_ping:
+                            request_nums -= 1
                         time.sleep(1)  # 请求成功后等待1秒再发送下一个请求
                 except socket.timeout:
                     print("请求超时。")
-                    if i == request_nums - 1:
-                        break  # 最后一个请求超时时立即返回
+                    if not continuous_ping:
+                        request_nums -= 1
                     time.sleep(1)  # 请求失败后等待1秒再发送下一个请求
                 except (OSError, ConnectionRefusedError) as e:
                     if isinstance(e, OSError) and e.errno == 10049:
                         print("请求超时。")
-                        if i == request_nums - 1:
-                            break  # 最后一个请求超时时立即返回
+                        if not continuous_ping:
+                            request_nums -= 1
                         time.sleep(1)  # 请求失败后等待1秒再发送下一个请求
                     else:
                         print(f"无法连接到 {ip}:{port}。")
                         # 请求失败时，设置丢失的请求数，用于正确计算丢包率
                         received_count += 1
                         response_times.append(0)
-                        if i == request_nums - 1:
-                            break  # 最后一个请求失败时立即返回
+                        if not continuous_ping:
+                            request_nums -= 1
                         time.sleep(1)  # 请求失败后等待1秒再发送下一个请求
 
         except KeyboardInterrupt:
             if received_count > 0:
                 print(f"\n{ip}:{port} 的 TCPing 统计信息:")
-                packet_loss_rate = ((request_nums - received_count) / request_nums) * 100
-                print(f"    数据包: 已发送 = {request_nums}，已接收 = {received_count}，丢失 = {packet_loss_rate:.1f}% 丢失")
+                packet_loss_rate = ((len(response_times) - received_count) / len(response_times)) * 100
+                print(f"    数据包: 已发送 = {len(response_times)}，已接收 = {received_count}，丢失 = {packet_loss_rate:.1f}% 丢失")
                 if received_count > 0:
                     avg_delay = sum(response_times) / received_count
                     min_delay = min(response_times)
                     max_delay = max(response_times)
                     print("往返行程的估计时间(以毫秒为单位):")
                     print(f"    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms")
-            print("Control-C")
+            print("TCPing 已停止。")
             sys.exit(0)
 
         packet_loss_rate = ((request_nums - received_count) / request_nums) * 100
@@ -179,10 +180,13 @@ def main():
     group.add_argument("-4", dest="force_ipv4", action="store_true", help="Force using IPv4.")
     group.add_argument("-6", dest="force_ipv6", action="store_true", help="Force using IPv6.")
 
+    # 添加 -t 参数来支持连续 TCPing
+    parser.add_argument("-t", dest="continuous_ping", action="store_true", help="TCPing the specified host continuously until stopped.")
+
     args = parser.parse_args()
 
     try:
-        tcping(args.domain, args.port, args.request_nums, args.force_ipv4, args.force_ipv6, args.dns_server, args.timeout)
+        tcping(args.domain, args.port, args.request_nums, args.force_ipv4, args.force_ipv6, args.dns_server, args.timeout, args.continuous_ping)
     except ValueError as e:
         print(e)
 
