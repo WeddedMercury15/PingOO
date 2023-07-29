@@ -73,7 +73,7 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, 
             total_sent = 0
 
             try:
-                while True:
+                while total_sent < request_nums:  # Loop until requested number of requests is sent
                     start_time = time.time()
                     try:
                         with socket.create_connection((ip, port), timeout=timeout / 1000) as conn:
