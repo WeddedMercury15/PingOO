@@ -93,7 +93,12 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None):
                         time.sleep(1)  # 请求失败后等待1秒再发送下一个请求
                     else:
                         print(f"无法连接到 {ip}:{port}。")
-                        break  # 当连接错误发生时立即返回
+                        # 请求失败时，设置丢失的请求数，用于正确计算丢包率
+                        received_count += 1
+                        response_times.append(0)
+                        if i == request_nums - 1:
+                            break  # 最后一个请求失败时立即返回
+                        time.sleep(1)  # 请求失败后等待1秒再发送下一个请求
 
         except KeyboardInterrupt:
             if received_count > 0:
@@ -118,6 +123,9 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None):
             max_delay = max(response_times)
             print("往返行程的估计时间(以毫秒为单位):")
             print(f"    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms")
+        else:
+            print("往返行程的估计时间(以毫秒为单位):")
+            print("    请求全部超时，无法计算往返行程时间。")
 
     except ValueError as e:
         print(e)
