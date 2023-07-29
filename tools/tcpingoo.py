@@ -73,22 +73,25 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None):
                 try:
                     with socket.create_connection((ip, port), timeout=1) as conn:
                         end_time = time.time()
-                        response_time = (end_time - start_time) * 1000  # Convert to milliseconds
+                        response_time = (end_time - start_time) * 1000  # 转换成毫秒
                         received_count += 1
                         response_times.append(response_time)
-                        print(f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL=64")
+                        print("来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL=64")
+                        time.sleep(1)  # 请求成功后等待1秒再发送下一个请求
                 except socket.timeout:
                     print("请求超时。")
                     if i == request_nums - 1:
-                        break  # Exit the loop immediately if the last request times out
+                        break  # 最后一个请求超时时立即返回
+                    time.sleep(1)  # 请求失败后等待1秒再发送下一个请求
                 except (OSError, ConnectionRefusedError) as e:
                     if isinstance(e, OSError) and e.errno == 10049:
                         print("请求超时。")
                         if i == request_nums - 1:
-                            break  # Exit the loop immediately if the last request times out
+                            break  # 最后一个请求超时时立即返回
+                        time.sleep(1)  # 请求失败后等待1秒再发送下一个请求
                     else:
                         print(f"无法连接到 {ip}:{port}。")
-                        break  # Exit the loop when a connection error occurs
+                        break  # 当连接错误发生时立即返回
 
         except KeyboardInterrupt:
             if received_count > 0:
@@ -105,7 +108,7 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None):
             sys.exit(0)
 
         packet_loss_rate = ((request_nums - received_count) / request_nums) * 100
-        print(f"\n{ip}:{port} 的 TCPing 统计信息:")
+        print("\n{ip}:{port} 的 TCPing 统计信息:")
         print(f"    数据包: 已发送 = {request_nums}，已接收 = {received_count}，丢失 = {packet_loss_rate:.1f}% 丢失")
         if received_count > 0:
             avg_delay = sum(response_times) / received_count
