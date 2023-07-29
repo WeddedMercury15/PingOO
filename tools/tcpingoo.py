@@ -43,6 +43,9 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, 
     try:
         ip = None
 
+        if not continuous_ping and request_nums < 1:
+            request_nums = 4
+
         if dns_server:
             resolver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             resolver.settimeout(1)
@@ -62,75 +65,108 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, 
                 # 如果 IPv4 解析失败，尝试使用 IPv6
                 ip = resolve_ip(domain, dns_server, force_ipv4=False)
 
-        print("\n正在 TCPing {}:{} [{}:{}] 具有 32 字节的数据:".format(domain, port, ip, port))
+        if continuous_ping:
+            print(f"\n正在 TCPing {domain}:{port} [{ip}:{port}] 具有 32 字节的数据:")
 
-        received_count = 0
-        response_times = []
-        total_sent = 0
+            received_count = 0
+            response_times = []
 
-        try:
-            while continuous_ping or total_sent < request_nums:
-                start_time = time.time()
-                try:
-                    with socket.create_connection((ip, port), timeout=timeout / 1000) as conn:
-                        end_time = time.time()
-                        response_time = (end_time - start_time) * 1000  # Convert to milliseconds
-                        received_count += 1
-                        response_times.append(response_time)
-                        print(f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL=64")
-                        total_sent += 1
-                        if not continuous_ping:
-                            break
+            try:
+                while True:
+                    start_time = time.time()
+                    try:
+                        with socket.create_connection((ip, port), timeout=timeout / 1000) as conn:
+                            end_time = time.time()
+                            response_time = (end_time - start_time) * 1000  # Convert to milliseconds
+                            received_count += 1
+                            response_times.append(response_time)
+                            print(f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL=64")
+                            time.sleep(1)
+                    except socket.timeout:
+                        print("请求超时。")
                         time.sleep(1)
-                except socket.timeout:
-                    print("请求超时。")
-                    total_sent += 1
-                    if not continuous_ping:
-                        break
-                    time.sleep(1)
-                except (OSError, ConnectionRefusedError) as e:
-                    if isinstance(e, OSError) and e.errno == 10049:
+                    except (OSError, ConnectionRefusedError) as e:
+                        if isinstance(e, OSError) and e.errno == 10049:
+                            print("请求超时。")
+                            time.sleep(1)
+                        else:
+                            print(f"无法连接到 {ip}:{port}。")
+                            received_count += 1
+                            response_times.append(0)
+                            time.sleep(1)
+
+            except KeyboardInterrupt:
+                pass
+
+            if received_count > 0:
+                packet_loss_rate = 0.0
+                avg_delay = sum(response_times) / received_count
+                min_delay = min(response_times)
+                max_delay = max(response_times)
+                print(f"\n{ip}:{port} 的 TCPing 统计信息:")
+                print(f"    数据包: 已发送 = {received_count}, 已接收 = {received_count}，丢失 = 0 (0.0% 丢失)")
+                print("往返行程的估计时间(以毫秒为单位):")
+                print(f"    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms")
+            else:
+                print(f"\n{ip}:{port} 的 TCPing 统计信息:")
+                print(f"    数据包: 已发送 = {received_count}, 已接收 = {received_count}，丢失 = 0 (0.0% 丢失)")
+                print("请求全部超时，无法计算往返行程时间。")
+
+        else:
+            print(f"\n正在 TCPing {domain}:{port} [{ip}:{port}] 具有 32 字节的数据:")
+
+            received_count = 0
+            response_times = []
+            total_sent = 0
+
+            try:
+                while total_sent < request_nums:
+                    start_time = time.time()
+                    try:
+                        with socket.create_connection((ip, port), timeout=timeout / 1000) as conn:
+                            end_time = time.time()
+                            response_time = (end_time - start_time) * 1000  # Convert to milliseconds
+                            received_count += 1
+                            response_times.append(response_time)
+                            print(f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL=64")
+                            total_sent += 1
+                            time.sleep(1)
+                    except socket.timeout:
                         print("请求超时。")
                         total_sent += 1
-                        if not continuous_ping:
-                            break
                         time.sleep(1)
-                    else:
-                        print(f"无法连接到 {ip}:{port}。")
-                        received_count += 1
-                        response_times.append(0)
-                        total_sent += 1
-                        if not continuous_ping:
-                            break
-                        time.sleep(1)
+                    except (OSError, ConnectionRefusedError) as e:
+                        if isinstance(e, OSError) and e.errno == 10049:
+                            print("请求超时。")
+                            total_sent += 1
+                            time.sleep(1)
+                        else:
+                            print(f"无法连接到 {ip}:{port}。")
+                            received_count += 1
+                            response_times.append(0)
+                            total_sent += 1
+                            time.sleep(1)
 
-        except KeyboardInterrupt:
-            pass
+            except KeyboardInterrupt:
+                pass
 
-        # If continuous_ping is True, we don't calculate packet loss rate
-        if continuous_ping:
-            packet_loss_rate = 0.0
-        else:
-            # For regular ping mode, total_sent indicates the number of packets requested
-            if total_sent > 0:
-                packet_loss_rate = ((total_sent - received_count) / total_sent) * 100
+            packet_loss_rate = ((total_sent - received_count) / total_sent) * 100 if total_sent > 0 else 0.0
+            avg_delay = sum(response_times) / received_count if received_count > 0 else 0.0
+            min_delay = min(response_times) if received_count > 0 else 0.0
+            max_delay = max(response_times) if received_count > 0 else 0.0
+
+            print(f"\n{ip}:{port} 的 TCPing 统计信息:")
+            print(f"    数据包: 已发送 = {total_sent}, 已接收 = {received_count}，丢失 = {int(total_sent - received_count)} ({packet_loss_rate:.1f}% 丢失)")
+
+            if received_count > 0:
+                print("往返行程的估计时间(以毫秒为单位):")
+                print(f"    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms")
             else:
-                packet_loss_rate = 0.0
-
-        print(f"\n{ip}:{port} 的 TCPing 统计信息:")
-        print(f"    数据包: 已发送 = {total_sent}, 已接收 = {received_count}，丢失 = {int(total_sent - received_count)} ({packet_loss_rate:.1f}% 丢失)")
-
-        if received_count > 0:
-            avg_delay = sum(response_times) / received_count
-            min_delay = min(response_times)
-            max_delay = max(response_times)
-            print("往返行程的估计时间(以毫秒为单位):")
-            print(f"    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms")
-        else:
-            print("请求全部超时，无法计算往返行程时间。")
+                print("请求全部超时，无法计算往返行程时间.")
 
     except ValueError as e:
         print(e)
+
 
 def print_help():
     print("""
