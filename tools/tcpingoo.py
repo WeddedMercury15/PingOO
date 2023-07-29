@@ -71,7 +71,17 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None):
                     time.sleep(1)  # Wait for 1 second before sending the next request
 
         except KeyboardInterrupt:
-            # ... (existing code)
+                if received_count > 0:
+                    print(f"\n{ip}:{port} 的 TCPing 统计信息:")
+                    packet_loss_rate = ((request_nums - received_count) / request_nums) * 100
+                    print(f"    数据包: 已发送 = {received_count}，已接收 = {received_count}，丢失 = {0} (0.0% 丢失)")
+                    avg_delay = sum(response_times) / received_count
+                    min_delay = min(response_times)
+                    max_delay = max(response_times)
+                    print("往返行程的估计时间(以毫秒为单位):")
+                    print(f"    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms")
+                print("Control-C")
+                sys.exit(0)
 
         packet_loss_rate = ((request_nums - received_count) / request_nums) * 100
         print(f"\n{ip}:{port} 的 TCPing 统计信息:")
