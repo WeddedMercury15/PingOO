@@ -19,14 +19,12 @@ def resolve_ip(hostname, dns_server=None):
             resolver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             resolver.settimeout(1)
             resolver.connect((dns_server, 53))
-            # 使用 socket.getaddrinfo 进行 DNS 解析，支持 IPv6
-            addr_info = socket.getaddrinfo(hostname, None, socket.AF_INET6)
-            ip = addr_info[0][4][0]  # 获取IPv6地址
+            addr_info = socket.getaddrinfo(hostname, None, socket.AF_INET)  # Use AF_INET for IPv4
+            ip = addr_info[0][4][0]
             resolver.close()
         else:
-            # 使用 socket.getaddrinfo 进行 DNS 解析，支持 IPv6
-            addr_info = socket.getaddrinfo(hostname, None, socket.AF_INET6)
-            ip = addr_info[0][4][0]  # 获取IPv6地址
+            addr_info = socket.getaddrinfo(hostname, None, socket.AF_INET)  # Use AF_INET for IPv4
+            ip = addr_info[0][4][0]
         return ip
     except socket.gaierror:
         raise ValueError(f"TCPing 请求找不到主机 {hostname}。请检查该名称，然后重试。")
