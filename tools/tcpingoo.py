@@ -39,7 +39,7 @@ def resolve_ip(hostname, dns_server=None, force_ipv4=False):
     except socket.gaierror:
         raise ValueError(f"TCPing 请求找不到主机 {hostname}。请检查该名称，然后重试。")
 
-def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None):
+def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, timeout=1000):
     try:
         ip = None
 
@@ -71,7 +71,7 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None):
             for i in range(request_nums):
                 start_time = time.time()
                 try:
-                    with socket.create_connection((ip, port), timeout=1) as conn:
+                    with socket.create_connection((ip, port), timeout=timeout / 1000) as conn:
                         end_time = time.time()
                         response_time = (end_time - start_time) * 1000  # 转换成毫秒
                         received_count += 1
@@ -152,7 +152,7 @@ def print_help():
     -s count       计数跃点的时间戳(仅适用于 IPv4)。
     -j host-list   与主机列表一起使用的松散源路由(仅适用于 IPv4)。
     -k host-list   与主机列表一起使用的严格源路由(仅适用于 IPv4)。
-    -w timeout     等待每次回复的超时时间(毫秒)。
+    #-w timeout     等待每次回复的超时时间(毫秒)。
     -R             同样使用路由标头测试反向路由(仅适用于 IPv6)。
                    根据 RFC 5095，已弃用此路由标头。
                    如果使用此标头，某些系统可能丢弃
@@ -172,7 +172,8 @@ def main():
     parser.add_argument("port", type=int, help="Target port number to TCPing.")
     parser.add_argument("-n", dest="request_nums", type=int, default=4, help="Number of requests to send (default: 4).")
     parser.add_argument("-d", dest="dns_server", type=str, help="Custom DNS server address for resolution.")
-    
+    parser.add_argument("-w", dest="timeout", type=int, default=1000, help="Timeout for each request in milliseconds (default: 1000).")
+
     # 通过添加互斥组，确保 -4 和 -6 参数互斥
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-4", dest="force_ipv4", action="store_true", help="Force using IPv4.")
@@ -181,7 +182,7 @@ def main():
     args = parser.parse_args()
 
     try:
-        tcping(args.domain, args.port, args.request_nums, args.force_ipv4, args.force_ipv6, args.dns_server)
+        tcping(args.domain, args.port, args.request_nums, args.force_ipv4, args.force_ipv6, args.dns_server, args.timeout)
     except ValueError as e:
         print(e)
 
