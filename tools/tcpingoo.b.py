@@ -23,7 +23,7 @@ def resolve_ip(hostname, dns_server=None, force_ipv4=False):
                 raise TimeoutError("DNS query to custom server timed out.")
         else:
             family = socket.AF_INET6 if not force_ipv4 else socket.AF_INET
-            addr_info = socket.getaddrinfo(hostname, None, family)
+            addr_info = socket.getaddrinfo(hostname, None, family, socket.SOCK_STREAM, 0, socket.AI_ADDRCONFIG)
             ip = addr_info[0][4][0]  # Get the IP address
 
         return ip
