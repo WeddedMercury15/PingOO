@@ -84,20 +84,30 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, 
                             received_count += 1
                             response_times.append(response_time)
                             print(f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL=64")
-                            time.sleep(1)
+                            if not continuous_ping:
+                                break  # 如果非连续ping，收到回复后立即退出循环
+                            time.sleep(1)  # 每次请求之间添加适当的延迟
+
                     except socket.timeout:
                         print("请求超时。")
                         response_times.append(0)  # 数据包丢失，添加一个占位符的响应时间
-                        time.sleep(1)
+                        if not continuous_ping:
+                            break  # 如果非连续ping，请求超时后立即退出循环
+                        time.sleep(1)  # 每次请求之间添加适当的延迟
+
                     except (OSError, ConnectionRefusedError) as e:
                         if isinstance(e, OSError) and e.errno == 10049:
                             print("请求超时。")
                             response_times.append(0)  # 数据包丢失，添加一个占位符的响应时间
-                            time.sleep(1)
+                            if not continuous_ping:
+                                break  # 如果非连续ping，请求超时后立即退出循环
+                            time.sleep(1)  # 每次请求之间添加适当的延迟
                         else:
                             print(f"无法连接到 {ip}:{port}。")
                             response_times.append(0)  # 数据包丢失，添加一个占位符的响应时间
-                            time.sleep(1)
+                            if not continuous_ping:
+                                break  # 如果非连续ping，无法连接后立即退出循环
+                            time.sleep(1)  # 每次请求之间添加适当的延迟
 
             except KeyboardInterrupt:
                 pass
