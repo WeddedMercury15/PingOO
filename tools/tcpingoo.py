@@ -43,9 +43,6 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, 
     try:
         ip = None
 
-        if not continuous_ping and request_nums < 1:
-            request_nums = 4
-
         if dns_server:
             resolver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             resolver.settimeout(1)
@@ -67,12 +64,10 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, 
 
         if continuous_ping:
             print(f"\n正在 TCPing {domain}:{port} [{ip}:{port}] 具有 32 字节的数据:")
-
             received_count = 0
             response_times = []
-
             try:
-                while True:  # 现在将循环条件设置为True，使得-t参数可以无限循环
+                while True:  # 无限循环发送请求
                     if request_nums > 0 and received_count >= request_nums:
                         break
 
@@ -112,13 +107,15 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, 
             except KeyboardInterrupt:
                 pass
 
-            packet_loss_rate = ((len(response_times) - received_count) / len(response_times)) * 100 if len(response_times) > 0 else 0.0
+            packet_loss_rate = ((len(response_times) - received_count) / len(response_times)) * 100 if len(
+                response_times) > 0 else 0.0
             avg_delay = sum(response_times) / received_count if received_count > 0 else 0.0
             min_delay = min(time_ms for time_ms in response_times if time_ms > 0) if received_count > 0 else 0.0
             max_delay = max(time_ms for time_ms in response_times if time_ms > 0) if received_count > 0 else 0.0
 
             print(f"\n{ip}:{port} 的 TCPing 统计信息:")
-            print(f"    数据包: 已发送 = {len(response_times)}, 已接收 = {received_count}，丢失 = {int(len(response_times) - received_count)} ({packet_loss_rate:.1f}% 丢失)")
+            print(
+                f"    数据包: 已发送 = {len(response_times)}, 已接收 = {received_count}，丢失 = {int(len(response_times) - received_count)} ({packet_loss_rate:.1f}% 丢失)")
 
             if received_count > 0:
                 print("往返行程的估计时间(以毫秒为单位):")
@@ -128,11 +125,9 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, 
 
         else:
             print(f"\n正在 TCPing {domain}:{port} [{ip}:{port}] 具有 32 字节的数据:")
-
             received_count = 0
             response_times = []
             total_sent = 0  # Initialize total_sent to track the actual number of packets sent
-
             try:
                 while total_sent < request_nums:
                     start_time = time.time()
@@ -166,7 +161,8 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, 
             max_delay = max(response_times) if received_count > 0 else 0.0
 
             print(f"\n{ip}:{port} 的 TCPing 统计信息:")
-            print(f"    数据包: 已发送 = {total_sent}, 已接收 = {received_count}，丢失 = {int(total_sent - received_count)} ({packet_loss_rate:.1f}% 丢失)")
+            print(
+                f"    数据包: 已发送 = {total_sent}, 已接收 = {received_count}，丢失 = {int(total_sent - received_count)} ({packet_loss_rate:.1f}% 丢失)")
 
             if received_count > 0:
                 print("往返行程的估计时间(以毫秒为单位):")
