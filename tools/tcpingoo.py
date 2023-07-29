@@ -70,6 +70,7 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, 
 
             received_count = 0
             response_times = []
+            total_sent = 0
 
             try:
                 while True:
@@ -94,23 +95,24 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, 
                             received_count += 1
                             response_times.append(0)
                             time.sleep(1)
+                    total_sent += 1
 
             except KeyboardInterrupt:
                 pass
 
+            packet_loss_rate = ((total_sent - received_count) / total_sent) * 100 if total_sent > 0 else 0.0
+            avg_delay = sum(response_times) / received_count if received_count > 0 else 0.0
+            min_delay = min(response_times) if received_count > 0 else 0.0
+            max_delay = max(response_times) if received_count > 0 else 0.0
+
+            print(f"\n{ip}:{port} 的 TCPing 统计信息:")
+            print(f"    数据包: 已发送 = {total_sent}, 已接收 = {received_count}，丢失 = {int(total_sent - received_count)} ({packet_loss_rate:.1f}% 丢失)")
+
             if received_count > 0:
-                packet_loss_rate = 0.0
-                avg_delay = sum(response_times) / received_count
-                min_delay = min(response_times)
-                max_delay = max(response_times)
-                print(f"\n{ip}:{port} 的 TCPing 统计信息:")
-                print(f"    数据包: 已发送 = {received_count}, 已接收 = {received_count}，丢失 = 0 (0.0% 丢失)")
                 print("往返行程的估计时间(以毫秒为单位):")
                 print(f"    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms")
             else:
-                print(f"\n{ip}:{port} 的 TCPing 统计信息:")
-                print(f"    数据包: 已发送 = {received_count}, 已接收 = {received_count}，丢失 = 0 (0.0% 丢失)")
-                print("请求全部超时，无法计算往返行程时间。")
+                print("请求全部超时，无法计算往返行程时间.")
 
         else:
             print(f"\n正在 TCPing {domain}:{port} [{ip}:{port}] 具有 32 字节的数据:")
@@ -166,7 +168,6 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, 
 
     except ValueError as e:
         print(e)
-
 
 def print_help():
     print("""
