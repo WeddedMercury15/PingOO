@@ -95,6 +95,71 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, timeout=1000):
     except ValueError as e:
         print(e)
 
+def tcping_continuous(domain, port, force_ipv4, force_ipv6, timeout=1000):
+    try:
+        ip = None
+
+        if force_ipv4:
+            # If the -4 option is used, perform DNS query only for IPv4
+            ip = resolve_ip(domain, force_ipv4=True)
+        elif force_ipv6:
+            # If the -6 option is used, perform DNS query only for IPv6
+            ip = resolve_ip(domain, force_ipv4=False)
+        else:
+            # Otherwise, use the system's network configuration to determine DNS query method
+            try:
+                # Try DNS query for IPv4
+                ip = resolve_ip(domain, force_ipv4=True)
+            except ValueError:
+                # If IPv4 query fails, use IPv6 for DNS query
+                ip = resolve_ip(domain, force_ipv4=False)
+
+        print(f"\n正在 TCPing {domain}:{port} [{ip}:{port}] 具有 32 字节的数据:")
+        request_num = 1
+        response_times = []
+
+        try:
+            while True:
+                start_time = time.time()
+                try:
+                    with socket.create_connection((ip, port), timeout=timeout / 1000) as conn:
+                        end_time = time.time()
+                        response_time = (end_time - start_time) * 1000  # Convert to milliseconds
+                        response_times.append(response_time)
+                        print(f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL=64")
+                        request_num += 1
+                        time.sleep(1)
+                except socket.timeout:
+                    print("请求超时。")
+                    time.sleep(1)
+                except (OSError, ConnectionRefusedError) as e:
+                    if isinstance(e, OSError) and e.errno == 10049:
+                        print("请求超时。")
+                        time.sleep(1)
+                    else:
+                        print(f"无法连接到 {ip}:{port}。")
+                        time.sleep(1)
+        except KeyboardInterrupt:
+            pass
+
+        print(f"\n{ip}:{port} 的 TCPing 统计信息:")
+        print(f"    已发送的请求数: {request_num - 1}")
+        print(f"    已接收的回复数: {len(response_times)}")
+        packet_loss_rate = ((request_num - 1 - len(response_times)) / (request_num - 1)) * 100 if request_num > 1 else 0.0
+        print(f"    丢失的回复数: {int(request_num - 1 - len(response_times))} ({packet_loss_rate:.1f}% 丢失)")
+
+        if len(response_times) > 0:
+            avg_delay = sum(response_times) / len(response_times)
+            min_delay = min(response_times)
+            max_delay = max(response_times)
+            print("往返行程的估计时间(以毫秒为单位):")
+            print(f"    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms")
+        else:
+            print("请求全部超时，无法计算往返行程时间.")
+
+    except ValueError as e:
+        print(e)
+
 def print_help():
     print("""
 用法: tcpingoo [-n count] [-d DNS_server] [-w timeout] [-4] [-6] target_name port
@@ -127,16 +192,12 @@ def main():
 
     parser.add_argument("domain", help="要 TCPing 的目标主机名。")
     parser.add_argument("port", type=int, help="目标主机的端口号。")
-    parser.add_argument("-n", dest="request_nums", metavar="count", type=int, default=4,
-                        help="计划发送的请求数 (默认: 4)。")
-    parser.add_argument("-d", dest="dns_server", metavar="DNS_server", default=None,
-                        help="自定义 DNS 服务器地址。")
-    parser.add_argument("-w", dest="timeout", metavar="timeout", type=int, default=1000,
-                        help="每次请求的超时时间(毫秒) (默认: 1000)。")
-    parser.add_argument("-4", dest="force_ipv4", action="store_true",
-                        help="强制使用 IPv4 进行查询。")
-    parser.add_argument("-6", dest="force_ipv6", action="store_true",
-                        help="强制使用 IPv6 进行查询。")
+    parser.add_argument("-n", dest="request_nums", metavar="count", type=int, default=4, help="计划发送的请求数 (默认: 4)。")
+    parser.add_argument("-d", dest="dns_server", metavar="DNS_server", default=None, help="自定义 DNS 服务器地址。")
+    parser.add_argument("-w", dest="timeout", metavar="timeout", type=int, default=1000, help="每次请求的超时时间(毫秒) (默认: 1000)。")
+    parser.add_argument("-4", dest="force_ipv4", action="store_true", help="强制使用 IPv4 进行查询。")
+    parser.add_argument("-6", dest="force_ipv6", action="store_true", help="强制使用 IPv6 进行查询。")
+    parser.add_argument("-t", dest="continuous_ping", action="store_true", help="无限执行TCPing直到手动Ctrl+C终止。")
 
     if len(sys.argv) == 1:
         print_help()
@@ -145,9 +206,12 @@ def main():
 
     try:
         if args.request_nums < 1:
-            args.request_nums = 4  # 如果未指定值，则将默认值设置为 4
+            args.request_nums = 4
 
-        tcping(args.domain, args.port, args.request_nums, args.force_ipv4, args.force_ipv6, args.timeout)
+        if args.continuous_ping:
+            tcping_continuous(args.domain, args.port, args.force_ipv4, args.force_ipv6, args.timeout)
+        else:
+            tcping(args.domain, args.port, args.request_nums, args.force_ipv4, args.force_ipv6, args.timeout)
     except ValueError as e:
         print(e)
 

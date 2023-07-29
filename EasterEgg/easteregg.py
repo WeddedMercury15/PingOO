@@ -1,37 +1,31 @@
+import pygame
+from pygame.locals import *
 import sys
-import time
-import os
 
-# 旋转的碗字符画
-bowl_frames = [
-    "      .-~~~-.",
-    "     /       \\",
-    "    |         |",
-    "    |         |",
-    "     \\       /",
-    "      `~-~-~'"
-]
+pygame.init()
+display = (800, 600)
+screen = pygame.display.set_mode(display, DOUBLEBUF)
 
-def clear_terminal():
-    # 清除终端屏幕内容，适用于Linux和Windows
-    if sys.platform.startswith('win'):
-        os.system('cls')
-    else:
-        os.system('clear')
+bowl_img = pygame.image.load('cheems.png')  # 替换为碗的图像文件路径
+bowl_img = pygame.transform.scale(bowl_img, (270, 270))
 
-def print_bowl_frame(frame):
-    # 打印碗的字符画
-    clear_terminal()
-    for line in frame:
-        print(line)
+angle = 0
 
-def rotate_bowl():
-    # 循环播放旋转的碗
-    while True:
-        for frame in bowl_frames:
-            print_bowl_frame(bowl_frames)
-            time.sleep(0.1)
-            bowl_frames.append(bowl_frames.pop(0))
+while True:
+    for event in pygame.event.get():
+        if event.type == QUIT:
+            pygame.quit()
+            sys.exit()
 
-if __name__ == "__main__":
-    rotate_bowl()
+    screen.fill((255, 255, 255))
+
+    rotated_bowl = pygame.transform.rotate(bowl_img, angle)
+    rotated_rect = rotated_bowl.get_rect(center=(display[0] // 2, display[1] // 2))
+    screen.blit(rotated_bowl, rotated_rect)
+
+    pygame.display.flip()
+    pygame.time.wait(10)
+
+    angle += 1
+    if angle >= 360:
+        angle = 0
