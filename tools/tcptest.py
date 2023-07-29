@@ -1,9 +1,11 @@
-# -*- coding: utf-8 -*-
-
 import sys
 import socket
 import time
 import argparse
+import signal
+
+# Add this global flag variable to track whether Ctrl+C was used or not
+ctrl_c_used = False
 
 def custom_gaierror(msg):
     class CustomGaiError(socket.gaierror):
@@ -11,6 +13,10 @@ def custom_gaierror(msg):
             super().__init__(-1, message)
 
     raise CustomGaiError(msg)
+
+def signal_handler(sig, frame):
+    global ctrl_c_used
+    ctrl_c_used = True
 
 def resolve_ip(hostname, force_ipv4=False):
     try:
@@ -48,19 +54,22 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, timeout=1000):
         print(f"\n正在 TCPing {domain}:{port} [{ip}:{port}] 具有 32 字节的数据:")
         received_count = 0
         response_times = []
-        total_sent = 0  # 初始化total_sent以跟踪实际发送的数据包数量
+        total_sent = 0
 
         try:
             while total_sent < request_nums:
+                if ctrl_c_used:  # Check if Ctrl+C was used
+                    break
+
                 start_time = time.time()
                 try:
                     with socket.create_connection((ip, port), timeout=timeout / 1000) as conn:
                         end_time = time.time()
-                        response_time = (end_time - start_time) * 1000  # Convert to milliseconds
+                        response_time = (end_time - start_time) * 1000
                         received_count += 1
                         response_times.append(response_time)
                         print(f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL=64")
-                        total_sent += 1  # 仅当发送数据包时才增加total_sent
+                        total_sent += 1
                         time.sleep(1)
                 except socket.timeout:
                     print("请求超时。")
@@ -71,7 +80,7 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, timeout=1000):
                         time.sleep(1)
                     else:
                         print(f"无法连接到 {ip}:{port}。")
-                        total_sent += 1  # I即使数据包丢失，也会增加total_sent
+                        total_sent += 1
                         time.sleep(1)
 
         except KeyboardInterrupt:
@@ -83,14 +92,16 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, timeout=1000):
         max_delay = max(response_times) if received_count > 0 else 0.0
 
         print(f"\n{ip}:{port} 的 TCPing 统计信息:")
-        print(
-            f"    数据包: 已发送 = {total_sent}, 已接收 = {received_count}，丢失 = {int(total_sent - received_count)} ({packet_loss_rate:.1f}% 丢失)")
+        print(f"    数据包: 已发送 = {total_sent}, 已接收 = {received_count}，丢失 = {int(total_sent - received_count)} ({packet_loss_rate:.1f}% 丢失)")
 
         if received_count > 0:
             print("往返行程的估计时间(以毫秒为单位):")
             print(f"    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms")
         else:
             print("请求全部超时，无法计算往返行程时间.")
+
+        if ctrl_c_used:  # Only print "Control-C" if Ctrl+C was used
+            print("Control-C")
 
     except ValueError as e:
         print(e)
@@ -224,4 +235,6 @@ def main():
         print(e)
 
 if __name__ == '__main__':
+    # Set up the signal handler for SIGINT (Ctrl+C)
+    signal.signal(signal.SIGINT, signal_handler)
     main()
