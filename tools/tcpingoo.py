@@ -32,22 +32,19 @@ def resolve_ip(hostname, dns_server=None):
 
 def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None):
     try:
-        # 根据参数选择使用 IPv4 或 IPv6 进行解析和测试
-        if force_ipv4:
-            try:
-                ip = socket.inet_aton(domain)
-                ip = domain
-            except socket.error:
-                ip = resolve_ip(domain, dns_server)
-        elif force_ipv6:
-            ip = resolve_ip(domain, dns_server)
+        ip = None
+
+        if dns_server:
+            # Custom DNS server specified, use it for resolution
+            resolver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            resolver.settimeout(1)
+            resolver.connect((dns_server, 53))
+            addr_info = socket.getaddrinfo(domain, None, socket.AF_INET6)
+            ip = addr_info[0][4][0]  # Get the IPv6 address
+            resolver.close()
         else:
-            # 如果没有指定 -4 或 -6，则根据域名的 IP 类型自动选择
-            try:
-                ip = socket.inet_aton(domain)
-                ip = domain
-            except socket.error:
-                ip = resolve_ip(domain, dns_server)
+            addr_info = socket.getaddrinfo(domain, None, socket.AF_INET6)
+            ip = addr_info[0][4][0]  # Get the IPv6 address
 
         print("\n正在 TCPing {}:{} 具有 32 字节的数据:".format(domain, port))
 
@@ -76,37 +73,18 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None):
                     else:
                         print(f"无法连接到 {ip}:{port}。")
                         break  # Exit the loop when a connection error occurs
-                
-                
-                
-                if i < request_nums - 1:
-                    time.sleep(1)  # Wait for 1 second before sending the next request
-
-
-                if i < request_nums - 1:
-                    time.sleep(1)  # Wait for 1 second before sending the next request
-
-
-                
-                if i < request_nums - 1:
-                    time.sleep(1)  # Wait for 1 second before sending the next request
-
-
-                if i < request_nums - 1:
-                    time.sleep(1)  # Wait for 1 second before sending the next request
 
         except KeyboardInterrupt:
+            if received_count > 0:
+                print(f"\n{ip}:{port} 的 TCPing 统计信息:")
+                packet_loss_rate = ((request_nums - received_count) / request_nums) * 100
+                print(f"    数据包: 已发送 = {request_nums}，已接收 = {received_count}，丢失 = {packet_loss_rate:.1f}% 丢失")
                 if received_count > 0:
-                    print(f"\n{ip}:{port} 的 TCPing 统计信息:")
-                    packet_loss_rate = ((request_nums - received_count) / request_nums) * 100
-        print(f"\n{ip}:{port} 的 TCPing 统计信息:")
-        print(f"    数据包: 已发送 = {request_nums}，已接收 = {received_count}，丢失 = {packet_loss_rate:.1f}% 丢失")
-        if received_count > 0:
-            avg_delay = sum(response_times) / received_count
-            min_delay = min(response_times)
-            max_delay = max(response_times)
-            print("往返行程的估计时间(以毫秒为单位):")
-            print(f"    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms")
+                    avg_delay = sum(response_times) / received_count
+                    min_delay = min(response_times)
+                    max_delay = max(response_times)
+                    print("往返行程的估计时间(以毫秒为单位):")
+                    print(f"    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms")
             print("Control-C")
             sys.exit(0)
 
