@@ -1,0 +1,1 @@
+pyinstaller --onefile --name tcptest --add-data "tcptest.py;." --upx-dir "D:\Software\upx-4.0.2-win32" tcptest.py
