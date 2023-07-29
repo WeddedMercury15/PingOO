@@ -70,10 +70,12 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, 
 
             received_count = 0
             response_times = []
-            total_sent = 0
 
             try:
-                while total_sent < request_nums:  # Loop until requested number of requests is sent
+                while True:  # Loop until stopped manually
+                    if received_count >= request_nums:
+                        break
+
                     start_time = time.time()
                     try:
                         with socket.create_connection((ip, port), timeout=timeout / 1000) as conn:
@@ -96,19 +98,17 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, 
                             print(f"无法连接到 {ip}:{port}。")
                             response_times.append(0)  # Packet is lost, add a placeholder for response_time
                             time.sleep(1)
-                    total_sent += 1
 
             except KeyboardInterrupt:
                 pass
 
-            received_count = sum(1 for time_ms in response_times if time_ms > 0)  # Count non-zero response times
-            packet_loss_rate = ((total_sent - received_count) / total_sent) * 100 if total_sent > 0 else 0.0
+            packet_loss_rate = ((len(response_times) - received_count) / len(response_times)) * 100 if len(response_times) > 0 else 0.0
             avg_delay = sum(response_times) / received_count if received_count > 0 else 0.0
             min_delay = min(time_ms for time_ms in response_times if time_ms > 0) if received_count > 0 else 0.0
             max_delay = max(time_ms for time_ms in response_times if time_ms > 0) if received_count > 0 else 0.0
 
             print(f"\n{ip}:{port} 的 TCPing 统计信息:")
-            print(f"    数据包: 已发送 = {total_sent}, 已接收 = {received_count}，丢失 = {int(total_sent - received_count)} ({packet_loss_rate:.1f}% 丢失)")
+            print(f"    数据包: 已发送 = {len(response_times)}, 已接收 = {received_count}，丢失 = {int(len(response_times) - received_count)} ({packet_loss_rate:.1f}% 丢失)")
 
             if received_count > 0:
                 print("往返行程的估计时间(以毫秒为单位):")
