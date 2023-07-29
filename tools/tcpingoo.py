@@ -20,21 +20,21 @@ def resolve_ip(hostname, dns_server=None, force_ipv4=False):
             resolver.settimeout(1)
             resolver.connect((dns_server, 53))
             addr_info = socket.getaddrinfo(hostname, None, socket.AF_INET6)
-            ip = addr_info[0][4][0]  # Get the IPv6 address
+            ip = addr_info[0][4][0]  # 获取 IPv6 地址
             resolver.close()
         elif force_ipv4:
-            # Use socket.getaddrinfo for DNS resolution, supporting IPv4
+            # 使用socket.getaddrinfo进行DNS解析，支持IPv4
             addr_info = socket.getaddrinfo(hostname, None, socket.AF_INET)
-            ip = addr_info[0][4][0]  # Get IPv4 address
+            ip = addr_info[0][4][0]  # 获取 IPv4 地址
         else:
-            # Try to resolve using IPv4
+            # 尝试使用 IPv4 解决
             try:
                 addr_info = socket.getaddrinfo(hostname, None, socket.AF_INET)
-                ip = addr_info[0][4][0]  # Get IPv4 address
+                ip = addr_info[0][4][0]  # 获取 IPv4 地址
             except socket.gaierror:
-                # If IPv4 resolution fails, try using IPv6
+                # 如果 IPv4 解析失败，请尝试使用 IPv6
                 addr_info = socket.getaddrinfo(hostname, None, socket.AF_INET6)
-                ip = addr_info[0][4][0]  # Get the IPv6 address
+                ip = addr_info[0][4][0]  # 获取 IPv6 地址
         return ip
     except socket.gaierror:
         raise ValueError(f"TCPing 请求找不到主机 {hostname}。请检查该名称，然后重试。")
@@ -48,7 +48,7 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None):
             resolver.settimeout(1)
             resolver.connect((dns_server, 53))
             addr_info = socket.getaddrinfo(domain, None, socket.AF_INET6)
-            ip = addr_info[0][4][0]  # Get the IPv6 address
+            ip = addr_info[0][4][0]  # 获取 IPv6 地址
             resolver.close()
         elif force_ipv4:
             ip = resolve_ip(domain, dns_server, force_ipv4=True)
@@ -56,13 +56,13 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None):
             ip = resolve_ip(domain, dns_server, force_ipv4=False)
         else:
             try:
-                # Try to resolve using IPv4
+                # 尝试使用 IPv4 进行解析
                 ip = resolve_ip(domain, dns_server, force_ipv4=True)
             except ValueError:
-                # If IPv4 resolution fails, try using IPv6
+                # 如果 IPv4 解析失败，尝试使用 IPv6
                 ip = resolve_ip(domain, dns_server, force_ipv4=False)
 
-        print("\n正在 TCPing {}:{} 具有 32 字节的数据:".format(domain, port))
+        print("\n正在 TCPing {}:{} [{}:{}] 具有 32 字节的数据:".format(domain, port, ip, port))
 
         received_count = 0
         response_times = []
@@ -160,9 +160,9 @@ def print_help():
     -S srcaddr     要使用的源地址。
     -c compartment 路由隔离舱标识符。
     -p             Ping Hyper-V 网络虚拟化提供程序地址。
-    -4             强制使用 IPv4。
-    -6             强制使用 IPv6。
-    -d             自定义 DNS 服务器地址
+    #-4             强制使用 IPv4。
+    #-6             强制使用 IPv6。
+    #-d             自定义 DNS 服务器地址
     """)
 
 def main():
