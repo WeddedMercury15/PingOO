@@ -117,6 +117,8 @@ def tcping_continuous(domain, port, force_ipv4, force_ipv6, timeout=1000):
         print(f"\n正在 TCPing {domain}:{port} [{ip}:{port}] 具有 32 字节的数据:")
         request_num = 1
         response_times = []
+        received_count = 0
+        lost_count = 0
 
         try:
             while True:
@@ -127,31 +129,37 @@ def tcping_continuous(domain, port, force_ipv4, force_ipv6, timeout=1000):
                         response_time = (end_time - start_time) * 1000  # Convert to milliseconds
                         response_times.append(response_time)
                         print(f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL=64")
+                        received_count += 1
                         request_num += 1
                         time.sleep(1)
                 except socket.timeout:
                     print("请求超时。")
+                    lost_count += 1
+                    request_num += 1
                     time.sleep(1)
                 except (OSError, ConnectionRefusedError) as e:
                     if isinstance(e, OSError) and e.errno == 10049:
                         print("请求超时。")
+                        lost_count += 1
+                        request_num += 1
                         time.sleep(1)
                     else:
                         print(f"无法连接到 {ip}:{port}。")
+                        lost_count += 1
+                        request_num += 1
                         time.sleep(1)
         except KeyboardInterrupt:
             pass
 
-        print(f"\n{ip}:{port} 的 TCPing 统计信息:")
-        print(f"    已发送的请求数: {request_num - 1}")
-        print(f"    已接收的回复数: {len(response_times)}")
-        packet_loss_rate = ((request_num - 1 - len(response_times)) / (request_num - 1)) * 100 if request_num > 1 else 0.0
-        print(f"    丢失的回复数: {int(request_num - 1 - len(response_times))} ({packet_loss_rate:.1f}% 丢失)")
+        packet_loss_rate = (lost_count / request_num) * 100 if request_num > 0 else 0.0
+        avg_delay = sum(response_times) / received_count if received_count > 0 else 0.0
+        min_delay = min(response_times) if received_count > 0 else 0.0
+        max_delay = max(response_times) if received_count > 0 else 0.0
 
-        if len(response_times) > 0:
-            avg_delay = sum(response_times) / len(response_times)
-            min_delay = min(response_times)
-            max_delay = max(response_times)
+        print(f"\n{ip}:{port} 的 TCPing 统计信息:")
+        print(f"    数据包: 已发送 = {request_num - 1}, 已接收 = {received_count}，丢失 = {lost_count} ({packet_loss_rate:.1f}% 丢失)")
+
+        if received_count > 0:
             print("往返行程的估计时间(以毫秒为单位):")
             print(f"    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms")
         else:
