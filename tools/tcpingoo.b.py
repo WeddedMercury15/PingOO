@@ -13,15 +13,14 @@ def custom_gaierror(msg):
 def resolve_ip(hostname, dns_server=None, force_ipv4=False):
     try:
         if dns_server:
+            # Create a custom resolver with the specified DNS server
             resolver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             resolver.settimeout(1)
-
-            # Connect to the custom DNS server
             resolver.connect((dns_server, 53))
 
-            # Use the custom DNS server for resolution
+            # Use the custom resolver to get address info
             family = socket.AF_INET6 if not force_ipv4 else socket.AF_INET
-            addr_info = socket.getaddrinfo(hostname, None, family)
+            addr_info = resolver.getaddrinfo(hostname, None, family)
             ip = addr_info[0][4][0]  # Get the IP address
 
             resolver.close()
