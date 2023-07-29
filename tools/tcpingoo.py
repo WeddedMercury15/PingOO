@@ -66,7 +66,7 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, 
 
         received_count = 0
         response_times = []
-        total_sent = 0  # Track total packets sent, including both successful responses and timeouts
+        total_sent = 0
 
         try:
             while continuous_ping or total_sent < request_nums:
@@ -78,59 +78,59 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, 
                         received_count += 1
                         response_times.append(response_time)
                         print(f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL=64")
-                        total_sent += 1  # Increment total_sent for each ping attempt
+                        total_sent += 1
                         if not continuous_ping:
-                            break  # Exit loop after sending one successful ping
-                        time.sleep(1)  # Wait 1 second before sending the next request
+                            break
+                        time.sleep(1)
                 except socket.timeout:
                     print("请求超时。")
-                    total_sent += 1  # Increment total_sent for each ping attempt, including timeouts
+                    total_sent += 1
                     if not continuous_ping:
-                        break  # Exit loop after sending one unsuccessful ping
-                    time.sleep(1)  # Wait 1 second before sending the next request
+                        break
+                    time.sleep(1)
                 except (OSError, ConnectionRefusedError) as e:
                     if isinstance(e, OSError) and e.errno == 10049:
                         print("请求超时。")
-                        total_sent += 1  # Increment total_sent for each ping attempt, including timeouts
+                        total_sent += 1
                         if not continuous_ping:
-                            break  # Exit loop after sending one unsuccessful ping
-                        time.sleep(1)  # Wait 1 second before sending the next request
+                            break
+                        time.sleep(1)
                     else:
                         print(f"无法连接到 {ip}:{port}。")
-                        received_count += 1  # Count connection errors as received (to include them in statistics)
+                        received_count += 1
                         response_times.append(0)
-                        total_sent += 1  # Increment total_sent for each ping attempt, including connection errors
+                        total_sent += 1
                         if not continuous_ping:
-                            break  # Exit loop after sending one unsuccessful ping
-                        time.sleep(1)  # Wait 1 second before sending the next request
+                            break
+                        time.sleep(1)
 
         except KeyboardInterrupt:
             pass
 
         if continuous_ping:
-            received_count = len(response_times)
-            total_sent = received_count
-
-        if total_sent > 0:
-            packet_loss_rate = ((total_sent - received_count) / total_sent) * 100
+            # In continuous ping mode, we should not set total_sent to -1
+            # Instead, we keep it as the number of packets sent so far
+            if total_sent > 0:
+                packet_loss_rate = ((total_sent - received_count) / total_sent) * 100
+            else:
+                packet_loss_rate = 0.0
         else:
-            packet_loss_rate = 100.0
+            # For regular ping mode, total_sent indicates the number of packets requested
+            if total_sent > 0:
+                packet_loss_rate = ((total_sent - received_count) / total_sent) * 100
+            else:
+                packet_loss_rate = 0.0
 
         print(f"\n{ip}:{port} 的 TCPing 统计信息:")
-        print(f"    数据包: 已发送 = {total_sent}，已接收 = {received_count}，丢失 = {packet_loss_rate:.1f}% 丢失")
+        print(f"    数据包: 已发送 = {total_sent}, 已接收 = {received_count}，丢失 = {int(total_sent - received_count)} ({packet_loss_rate:.1f}% 丢失)")
 
         if received_count > 0:
-            packet_loss_rate = ((request_nums - received_count) / request_nums) * 100
-            print(f"\n{ip}:{port} 的 TCPing 统计信息:")
-            print(f"    数据包: 已发送 = {request_nums}，已接收 = {received_count}，丢失 = {packet_loss_rate:.1f}% 丢失")
-
-        avg_delay = sum(response_times) / received_count
-        min_delay = min(response_times)
-        max_delay = max(response_times)
-        print("往返行程的估计时间(以毫秒为单位):")
-        print(f"    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms")
-        
-        if received_count == 0:
+            avg_delay = sum(response_times) / received_count
+            min_delay = min(response_times)
+            max_delay = max(response_times)
+            print("往返行程的估计时间(以毫秒为单位):")
+            print(f"    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms")
+        else:
             print("请求全部超时，无法计算往返行程时间。")
 
     except ValueError as e:
@@ -191,6 +191,9 @@ def main():
     args = parser.parse_args()
 
     try:
+        if not args.continuous_ping and args.request_nums < 1:
+            args.request_nums = 4  # Set default value to 4 if no value is specified
+
         tcping(args.domain, args.port, args.request_nums, args.force_ipv4, args.force_ipv6, args.dns_server, args.timeout, args.continuous_ping)
     except ValueError as e:
         print(e)
