@@ -1,5 +1,6 @@
 import sys
 import time
+import os
 
 # 旋转的碗字符画
 bowl_frames = [
