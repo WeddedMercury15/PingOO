@@ -107,13 +107,9 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, 
         except KeyboardInterrupt:
             pass
 
+        # If continuous_ping is True, we don't calculate packet loss rate
         if continuous_ping:
-            # In continuous ping mode, we should not set total_sent to -1
-            # Instead, we keep it as the number of packets sent so far
-            if total_sent > 0:
-                packet_loss_rate = ((total_sent - received_count) / total_sent) * 100
-            else:
-                packet_loss_rate = 0.0
+            packet_loss_rate = 0.0
         else:
             # For regular ping mode, total_sent indicates the number of packets requested
             if total_sent > 0:
