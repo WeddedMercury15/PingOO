@@ -85,25 +85,27 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, 
                             time.sleep(1)
                     except socket.timeout:
                         print("请求超时。")
+                        response_times.append(0)  # Packet is lost, add a placeholder for response_time
                         time.sleep(1)
                     except (OSError, ConnectionRefusedError) as e:
                         if isinstance(e, OSError) and e.errno == 10049:
                             print("请求超时。")
+                            response_times.append(0)  # Packet is lost, add a placeholder for response_time
                             time.sleep(1)
                         else:
                             print(f"无法连接到 {ip}:{port}。")
-                            received_count += 1
-                            response_times.append(0)
+                            response_times.append(0)  # Packet is lost, add a placeholder for response_time
                             time.sleep(1)
                     total_sent += 1
 
             except KeyboardInterrupt:
                 pass
 
+            received_count = sum(1 for time_ms in response_times if time_ms > 0)  # Count non-zero response times
             packet_loss_rate = ((total_sent - received_count) / total_sent) * 100 if total_sent > 0 else 0.0
             avg_delay = sum(response_times) / received_count if received_count > 0 else 0.0
-            min_delay = min(response_times) if received_count > 0 else 0.0
-            max_delay = max(response_times) if received_count > 0 else 0.0
+            min_delay = min(time_ms for time_ms in response_times if time_ms > 0) if received_count > 0 else 0.0
+            max_delay = max(time_ms for time_ms in response_times if time_ms > 0) if received_count > 0 else 0.0
 
             print(f"\n{ip}:{port} 的 TCPing 统计信息:")
             print(f"    数据包: 已发送 = {total_sent}, 已接收 = {received_count}，丢失 = {int(total_sent - received_count)} ({packet_loss_rate:.1f}% 丢失)")
