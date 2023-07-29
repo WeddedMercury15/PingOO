@@ -15,24 +15,24 @@ def resolve_ip(hostname, dns_server=None, force_ipv4=False):
         if dns_server:
             resolver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             resolver.settimeout(1)
+
+            # Connect to the custom DNS server
             resolver.connect((dns_server, 53))
-            addr_info = socket.getaddrinfo(hostname, None, socket.AF_INET6)
-            ip = addr_info[0][4][0]  # 获取 IPv6 地址
+
+            # Use the custom DNS server for resolution
+            family = socket.AF_INET6 if not force_ipv4 else socket.AF_INET
+            addr_info = socket.getaddrinfo(hostname, None, family)
+            ip = addr_info[0][4][0]  # Get the IP address
+
             resolver.close()
-        elif force_ipv4:
-            # 使用socket.getaddrinfo进行DNS解析，支持IPv4
-            addr_info = socket.getaddrinfo(hostname, None, socket.AF_INET)
-            ip = addr_info[0][4][0]  # 获取 IPv4 地址
         else:
-            # 尝试使用 IPv4 解决
-            try:
-                addr_info = socket.getaddrinfo(hostname, None, socket.AF_INET)
-                ip = addr_info[0][4][0]  # 获取 IPv4 地址
-            except socket.gaierror:
-                # 如果 IPv4 解析失败，请尝试使用 IPv6
-                addr_info = socket.getaddrinfo(hostname, None, socket.AF_INET6)
-                ip = addr_info[0][4][0]  # 获取 IPv6 地址
+            # If no custom DNS server is provided, use the system's default resolver
+            family = socket.AF_INET6 if not force_ipv4 else socket.AF_INET
+            addr_info = socket.getaddrinfo(hostname, None, family)
+            ip = addr_info[0][4][0]  # Get the IP address
+
         return ip
+
     except socket.gaierror:
         raise ValueError(f"TCPing 请求找不到主机 {hostname}。请检查该名称，然后重试。")
 
@@ -41,23 +41,22 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, dns_server=None, 
         ip = None
 
         if dns_server:
-            resolver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            resolver.settimeout(1)
-            resolver.connect((dns_server, 53))
-            addr_info = socket.getaddrinfo(domain, None, socket.AF_INET6)
-            ip = addr_info[0][4][0]  # 获取 IPv6 地址
-            resolver.close()
+            try:
+                # Check if the custom DNS server is valid and reachable
+                resolve_ip(domain, dns_server, force_ipv4=False)
+                # If valid, resolve the domain using the custom DNS server
+                addr_info = socket.getaddrinfo(domain, None, socket.AF_INET6)
+                ip = addr_info[0][4][0]  # Get IPv6 address
+            except ValueError:
+                raise ValueError(f"TCPing 请求找不到主机 {domain}。请检查该名称，然后重试。")
+
         elif force_ipv4:
             ip = resolve_ip(domain, dns_server, force_ipv4=True)
         elif force_ipv6:
             ip = resolve_ip(domain, dns_server, force_ipv4=False)
         else:
-            try:
-                # 尝试使用 IPv4 进行解析
-                ip = resolve_ip(domain, dns_server, force_ipv4=True)
-            except ValueError:
-                # 如果 IPv4 解析失败，尝试使用 IPv6
-                ip = resolve_ip(domain, dns_server, force_ipv4=False)
+            # Resolve using IPv4 as default
+            ip = resolve_ip(domain, dns_server, force_ipv4=True)
 
         print(f"\n正在 TCPing {domain}:{port} [{ip}:{port}] 具有 32 字节的数据:")
         received_count = 0
