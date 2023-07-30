@@ -5945,6 +5945,7 @@ static PyObject *impl___main__$$$function__5_main(struct Nuitka_FunctionObject c
         PyObject *tmp_string_concat_values_2;
         PyObject *tmp_tuple_element_2;
         PyObject *tmp_kw_call_value_3_1;
+        PyObject *tmp_kw_call_value_4_1;
         tmp_expression_value_3 = GET_STRING_DICT_VALUE(moduledict___main__, (Nuitka_StringObject *)mod_consts[90]);
 
         if (unlikely(tmp_expression_value_3 == NULL)) {
@@ -6232,9 +6233,10 @@ static PyObject *impl___main__$$$function__5_main(struct Nuitka_FunctionObject c
             goto frame_exception_exit_1;
         }
         tmp_kw_call_value_3_1 = mod_consts[104];
+        tmp_kw_call_value_4_1 = Py_False;
         frame_5b9288a92dfaa3b9479abd81f2355a54->m_frame.f_lineno = 122;
         {
-            PyObject *kw_values[4] = {tmp_kw_call_value_0_1, tmp_kw_call_value_1_1, tmp_kw_call_value_2_1, tmp_kw_call_value_3_1};
+            PyObject *kw_values[5] = {tmp_kw_call_value_0_1, tmp_kw_call_value_1_1, tmp_kw_call_value_2_1, tmp_kw_call_value_3_1, tmp_kw_call_value_4_1};
 
             tmp_assign_source_2 = CALL_FUNCTION_WITH_NO_ARGS_KWSPLIT(tmp_called_value_1, kw_values, mod_consts[105]);
         }
@@ -6434,7 +6436,7 @@ static PyObject *impl___main__$$$function__5_main(struct Nuitka_FunctionObject c
             goto frame_exception_exit_1;
         }
         frame_5b9288a92dfaa3b9479abd81f2355a54->m_frame.f_lineno = 142;
-        tmp_call_result_6 = CALL_FUNCTION_WITH_ARGS2_VECTORCALL(tmp_called_value_7, &PyTuple_GET_ITEM(mod_consts[116], 0), mod_consts[117]);
+        tmp_call_result_6 = CALL_FUNCTION_WITH_ARGS1_VECTORCALL(tmp_called_value_7, &PyTuple_GET_ITEM(mod_consts[116], 0), mod_consts[117]);
         Py_DECREF(tmp_called_value_7);
         if (tmp_call_result_6 == NULL) {
             assert(ERROR_OCCURRED());
