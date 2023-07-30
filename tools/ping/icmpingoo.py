@@ -93,7 +93,7 @@ def icmping(
         lost_count = 0
 
         try:
-            while continuous_ping or request_num <= request_nums:
+            while not continuous_ping and request_num <= request_nums:
                 if ctrl_c_used:  # 检查是否使用了 Ctrl+C
                     break
 
@@ -204,6 +204,9 @@ def main():
     try:
         if args.request_nums < 1:
             args.request_nums = 4
+
+        if args.continuous_ping and args.request_nums > 0:
+            print("[警告] 同时使用 -t 和 -n 参数时，-t 参数将被忽略，仅执行指定次数的 ICMPing 操作。")
 
         icmping(
             args.hostname,
