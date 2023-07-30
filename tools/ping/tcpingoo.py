@@ -70,9 +70,6 @@ def tcping(
                 # 如果IPv4查询失败，则使用IPv6进行DNS查询
                 ip = resolve_ip(domain, force_ipv4=False)
 
-        if continuous_ping and request_nums > 1:
-            print("[警告] 当同时使用 -t 和 -n 参数时，-t 参数将被忽略，而执行 -n 参数所指定的次数的 TCPing 操作.")
-
         print(f"\n正在 TCPing {domain}:{port} [{ip}:{port}] 具有 32 字节的数据:")
         request_num = 1
         response_times = []
@@ -80,78 +77,43 @@ def tcping(
         lost_count = 0
 
         try:
-            if continuous_ping:
-                while request_num <= request_nums and not ctrl_c_used:
-                    start_time = time.time()
-                    try:
-                        with socket.create_connection(
-                            (ip, port), timeout=timeout / 1000
-                        ) as conn:
-                            # 在发送 ping 请求之前设置 TTL 值
-                            conn.setsockopt(socket.IPPROTO_IP, socket.IP_TTL, ttl)
+            while continuous_ping or request_num <= request_nums:
+                if ctrl_c_used:  # 检查是否使用了 Ctrl+C
+                    break
 
-                            end_time = time.time()
-                            response_time = (end_time - start_time) * 1000  # 转换为毫秒
-                            response_times.append(response_time)
-                            print(
-                                f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL={ttl}"
-                            )
-                            received_count += 1
-                            request_num += 1
-                            time.sleep(1)
-                    except socket.timeout:
+                start_time = time.time()
+                try:
+                    with socket.create_connection(
+                        (ip, port), timeout=timeout / 1000
+                    ) as conn:
+                        # 在发送 ping 请求之前设置 TTL 值
+                        conn.setsockopt(socket.IPPROTO_IP, socket.IP_TTL, ttl)
+
+                        end_time = time.time()
+                        response_time = (end_time - start_time) * 1000  # 转换为毫秒
+                        response_times.append(response_time)
+                        print(
+                            f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL={ttl}"
+                        )
+                        received_count += 1
+                        request_num += 1
+                        time.sleep(1)
+                except socket.timeout:
+                    print("请求超时。")
+                    lost_count += 1
+                    request_num += 1
+                    time.sleep(1)
+                except (OSError, ConnectionRefusedError) as e:
+                    if isinstance(e, OSError) and e.errno == 10049:
                         print("请求超时。")
                         lost_count += 1
                         request_num += 1
                         time.sleep(1)
-                    except (OSError, ConnectionRefusedError) as e:
-                        if isinstance(e, OSError) and e.errno == 10049:
-                            print("请求超时。")
-                            lost_count += 1
-                            request_num += 1
-                            time.sleep(1)
-                        else:
-                            print(f"无法连接到 {ip}:{port}。")
-                            lost_count += 1
-                            request_num += 1
-                            time.sleep(1)
-            else:
-                # 修正请求的次数
-                request_nums = min(request_nums, 1)
-                while request_num <= request_nums and not ctrl_c_used:
-                    start_time = time.time()
-                    try:
-                        with socket.create_connection(
-                            (ip, port), timeout=timeout / 1000
-                        ) as conn:
-                            # 在发送 ping 请求之前设置 TTL 值
-                            conn.setsockopt(socket.IPPROTO_IP, socket.IP_TTL, ttl)
-
-                            end_time = time.time()
-                            response_time = (end_time - start_time) * 1000  # 转换为毫秒
-                            response_times.append(response_time)
-                            print(
-                                f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL={ttl}"
-                            )
-                            received_count += 1
-                            request_num += 1
-                            time.sleep(1)
-                    except socket.timeout:
-                        print("请求超时。")
+                    else:
+                        print(f"无法连接到 {ip}:{port}。")
                         lost_count += 1
                         request_num += 1
                         time.sleep(1)
-                    except (OSError, ConnectionRefusedError) as e:
-                        if isinstance(e, OSError) and e.errno == 10049:
-                            print("请求超时。")
-                            lost_count += 1
-                            request_num += 1
-                            time.sleep(1)
-                        else:
-                            print(f"无法连接到 {ip}:{port}。")
-                            lost_count += 1
-                            request_num += 1
-                            time.sleep(1)
 
         except KeyboardInterrupt:
             pass
