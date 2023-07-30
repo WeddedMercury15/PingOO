@@ -1,7 +1,7 @@
 AS=as
 CC="C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\downloads\ccache\v4.6\ccache.exe" "C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\downloads\gcc\x86\11.3.0-14.0.3-10.0.0-msvcrt-r3\mingw32\bin\gcc.exe"
 CCACHE_DIR=C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache
-CCACHE_LOGFILE=D:\Git\PingOO\tools\dist\tcpingoo.onefile-build\ccache-20000.txt
+CCACHE_LOGFILE=D:\Git\PingOO\tools\dist\tcpingoo.onefile-build\ccache-35020.txt
 CCCOM=$CC -o $TARGET -c $CFLAGS $CCFLAGS $_CCCOMCOM $SOURCES
 CFILESUFFIX=.c
 CPPDEFINES=['_WIN32_WINNT=0x0501', '__NUITKA_NO_ASSERT__', '_NUITKA_ONEFILE_MODE']
