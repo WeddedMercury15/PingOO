@@ -123,20 +123,26 @@ def main():
                                     formatter_class=argparse.RawDescriptionHelpFormatter,
                                     epilog="示例:\n"
                                             f"{script_name} example.com 80\n"
-                                            f"{script_name} example.com 80 -d 1.1.1.1\n"
-                                            f"{script_name} example.com 80 -n 10 -w 500\n"
                                             f"{script_name} example.com 80 -4\n"
-                                            f"{script_name} example.com 80 -6")
+                                            f"{script_name} example.com 80 -6\n"
+                                            f"{script_name} example.com 80 -d 1.1.1.1\n"
+                                            f"{script_name} example.com 80 -h\n"
+                                            f"{script_name} example.com 80 -i 128\n"
+                                            f"{script_name} example.com 80 -n 4\n"
+                                            f"{script_name} example.com 80 -t\n"
+                                            f"{script_name} example.com 80 -w 1000\n"
+
 
     parser.add_argument("domain", help="要 TCPing 的目标主机名。")
     parser.add_argument("port", type=int, help="目标主机的端口号。")
-    parser.add_argument("-n", dest="request_nums", metavar="count", type=int, default=4, help="要发送的回显请求数。")
-    parser.add_argument("-d", dest="dns_server", metavar="DNS_server", default=None, help="自定义 DNS 服务器地址。")
-    parser.add_argument("-w", dest="timeout", metavar="timeout", type=int, default=1000, help="等待每次回复的超时时间(毫秒)。")
     parser.add_argument("-4", dest="force_ipv4", action="store_true", help="强制使用 IPv4。")
     parser.add_argument("-6", dest="force_ipv6", action="store_true", help="强制使用 IPv6。")
-    parser.add_argument("-t", dest="continuous_ping", action="store_true", help="Ping 指定的主机，直到停止。\n若要查看统计信息并继续操作，请键入 Ctrl+Break； \n若要停止，请键入 Ctrl+C。")
+    parser.add_argument("-d", dest="dns_server", metavar="DNS_server", default=None, help="自定义 DNS 服务器地址。")
+    parser.add_argument("-h", "--help", action="help", help="显示帮助信息并退出。")
     parser.add_argument("-i", dest="ttl", metavar="TTL", type=int, default=128, help="生存时间。")
+    parser.add_argument("-n", dest="request_nums", metavar="count", type=int, default=4, help="要发送的回显请求数。")
+    parser.add_argument("-t", dest="continuous_ping", action="store_true", help="Ping 指定的主机，直到停止。\n若要查看统计信息并继续操作，请键入 Ctrl+Break； \n若要停止，请键入 Ctrl+C。")
+    parser.add_argument("-w", dest="timeout", metavar="timeout", type=int, default=1000, help="等待每次回复的超时时间(毫秒)。")
 
     args = parser.parse_args()
 
