@@ -1,7 +1,7 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QLabel, QPushButton, QWidget, QScrollArea, QFrame
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QScrollArea, QFrame
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QPixmap, QImage, QPainter
 
 class SpeedTestThread(QThread):
     speed_test_done = pyqtSignal(str)
@@ -76,7 +76,7 @@ class SpeedTestCard(QFrame):
         self.result_label.setText(result)
         self.start_button.setEnabled(True)
 
-class SpeedTestApp(QMainWindow):
+class SpeedTestApp(QWidget):
     def __init__(self):
         super().__init__()
 
@@ -99,6 +99,41 @@ class SpeedTestApp(QMainWindow):
         scroll_area.setWidget(main_widget)
 
         self.setCentralWidget(scroll_area)
+
+        self.create_blur_effect()
+
+    def create_blur_effect(self):
+        # 获取窗口截图
+        screen = QApplication.primaryScreen()
+        if screen is not None:
+            screenshot = screen.grabWindow(self.winId())
+            screenshot = screenshot.scaled(self.width(), self.height(), Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+
+            # 创建模糊效果
+            blurred = screenshot.copy()
+            painter = QPainter(blurred)
+            painter.setCompositionMode(QPainter.CompositionMode_DestinationIn)
+            painter.fillRect(blurred.rect(), QColor(0, 0, 0, 150))
+            painter.end()
+
+            self.setMask(blurred.mask())
+            self.setAutoFillBackground(True)
+            palette = self.palette()
+            palette.setBrush(self.backgroundRole(), blurred)
+            self.setPalette(palette)
+
+    def mousePressEvent(self, event):
+        self.offset = event.pos()
+
+    def mouseMoveEvent(self, event):
+        x = event.globalX()
+        y = event.globalY()
+        x_w = self.offset.x()
+        y_w = self.offset.y()
+        self.move(x - x_w, y - y_w)
+
+    def mouseReleaseEvent(self, event):
+        pass
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
