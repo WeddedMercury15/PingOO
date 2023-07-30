@@ -29,13 +29,13 @@ class SpeedTestApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("SpeedTest in Python - 简体中文版")
-        self.geometry("400x600")
+        self.geometry("600x400")
         self.minsize(400, 400)  # 设置窗口最小尺寸
 
         self.create_widgets()
 
     def create_widgets(self):
-        self.paned_window = ttk.PanedWindow(self, orient=tk.VERTICAL)
+        self.paned_window = ttk.PanedWindow(self, orient=tk.HORIZONTAL)
         self.paned_window.pack(fill=tk.BOTH, expand=True)
 
         self.speed_test_card = SpeedTestCard(self.paned_window, "测速结果")
