@@ -154,27 +154,36 @@ def main():
     script_name = os.path.basename(sys.argv[0])  # 获取脚本或可执行文件名称
 
     parser = argparse.ArgumentParser(
-        description=f"{script_name} - 使用 ICMP 协议检查目标主机的可达性。",
+        description=f"{script_name} - 使用 TCP 协议检查目标主机端口的可达性。",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="示例:\n"
-        f"{script_name} example.com\n"
-        f"{script_name} example.com -4\n"
-        f"{script_name} example.com -6\n"
-        f"{script_name} example.com -h\n"
-        f"{script_name} example.com -i 128\n"
-        f"{script_name} example.com -n 4\n"
-        f"{script_name} example.com -t\n"
-        f"{script_name} example.com -w 1000",
-        usage="%(prog)s hostname [-4] [-6] [-h] [-i TTL] [-n count] [-t] [-w timeout]",
+        f"{script_name} example.com 80\n"
+        f"{script_name} example.com 80 -4\n"
+        f"{script_name} example.com 80 -6\n"
+        f"{script_name} example.com 80 -d 1.1.1.1\n"
+        f"{script_name} example.com 80 -h\n"
+        f"{script_name} example.com 80 -i 128\n"
+        f"{script_name} example.com 80 -n 4\n"
+        f"{script_name} example.com 80 -t\n"
+        f"{script_name} example.com 80 -w 1000",
+        usage="%(prog)s domain port [-4] [-6] [-d DNS_server] [-h] [-i TTL] [-n count] [-t] [-w timeout]",
         add_help=False,
     )
 
-    parser.add_argument("hostname", help="要 ICMPing 的目标主机名或 IP 地址。")
+    parser.add_argument("domain", help="要 TCPing 的目标主机名。")
+    parser.add_argument("port", type=int, help="目标主机的端口号。")
     parser.add_argument("-4", dest="force_ipv4", action="store_true", help="强制使用 IPv4。")
     parser.add_argument("-6", dest="force_ipv6", action="store_true", help="强制使用 IPv6。")
+    parser.add_argument(
+        "-d",
+        dest="dns_server",
+        metavar="DNS_server",
+        default=None,
+        help="自定义 DNS 服务器地址。",
+    )
     parser.add_argument("-h", action="help", help="显示帮助信息并退出。")
     parser.add_argument(
-        "-i", dest="ttl", metavar="TTL", type=int, default=64, help="生存时间。"
+        "-i", dest="ttl", metavar="TTL", type=int, default=128, help="生存时间。"
     )
     parser.add_argument(
         "-n",
@@ -205,16 +214,21 @@ def main():
         if args.request_nums < 1:
             args.request_nums = 4
 
-        if args.continuous_ping and args.request_nums > 0:
-            print("[警告] 同时使用 -t 和 -n 参数时，-t 参数将被忽略，仅执行指定次数的 ICMPing 操作。")
+        # 仅当同时设置 -t 参数且未设置 -n 参数时，执行连续 TCP Ping 操作
+        continuous_ping = args.continuous_ping and args.request_nums == 4
 
-        icmping(
-            args.hostname,
+        # 打印警告信息（若需要）
+        if continuous_ping:
+            print("警告：同时使用 -t 和 -n 参数时，-t 参数将被忽略，仅执行指定次数的 TCPing 操作。\n")
+
+        tcping(
+            args.domain,
+            args.port,
             args.request_nums,
             args.force_ipv4,
             args.force_ipv6,
             args.timeout,
-            args.continuous_ping,
+            continuous_ping,
             args.ttl,
         )
 

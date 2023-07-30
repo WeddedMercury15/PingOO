@@ -77,43 +77,74 @@ def tcping(
         lost_count = 0
 
         try:
-            while not continuous_ping and request_num <= request_nums:
-                if ctrl_c_used:  # 检查是否使用了 Ctrl+C
-                    break
+            if continuous_ping:
+                # 如果使用 -t 参数，忽略 -n 参数，持续 ping 目标主机
+                while not ctrl_c_used:
+                    start_time = time.time()
+                    try:
+                        with socket.create_connection(
+                            (ip, port), timeout=timeout / 1000
+                        ) as conn:
+                            # 在发送 ping 请求之前设置 TTL 值
+                            conn.setsockopt(socket.IPPROTO_IP, socket.IP_TTL, ttl)
 
-                start_time = time.time()
-                try:
-                    with socket.create_connection(
-                        (ip, port), timeout=timeout / 1000
-                    ) as conn:
-                        # 在发送 ping 请求之前设置 TTL 值
-                        conn.setsockopt(socket.IPPROTO_IP, socket.IP_TTL, ttl)
-
-                        end_time = time.time()
-                        response_time = (end_time - start_time) * 1000  # 转换为毫秒
-                        response_times.append(response_time)
-                        print(
-                            f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL={ttl}"
-                        )
-                        received_count += 1
-                        request_num += 1
+                            end_time = time.time()
+                            response_time = (end_time - start_time) * 1000  # 转换为毫秒
+                            response_times.append(response_time)
+                            print(
+                                f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL={ttl}"
+                            )
+                            received_count += 1
+                            time.sleep(1)
+                    except socket.timeout:
+                        print("请求超时。")
+                        lost_count += 1
                         time.sleep(1)
-                except socket.timeout:
-                    print("请求超时。")
-                    lost_count += 1
-                    request_num += 1
-                    time.sleep(1)
-                except (OSError, ConnectionRefusedError) as e:
-                    if isinstance(e, OSError) and e.errno == 10049:
+                    except (OSError, ConnectionRefusedError) as e:
+                        if isinstance(e, OSError) and e.errno == 10049:
+                            print("请求超时。")
+                            lost_count += 1
+                            time.sleep(1)
+                        else:
+                            print(f"无法连接到 {ip}:{port}。")
+                            lost_count += 1
+                            time.sleep(1)
+            else:
+                # 如果没有使用 -t 参数，则执行 -n 参数指定次数的 ping 操作
+                while request_num <= request_nums and not ctrl_c_used:
+                    start_time = time.time()
+                    try:
+                        with socket.create_connection(
+                            (ip, port), timeout=timeout / 1000
+                        ) as conn:
+                            # 在发送 ping 请求之前设置 TTL 值
+                            conn.setsockopt(socket.IPPROTO_IP, socket.IP_TTL, ttl)
+
+                            end_time = time.time()
+                            response_time = (end_time - start_time) * 1000  # 转换为毫秒
+                            response_times.append(response_time)
+                            print(
+                                f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL={ttl}"
+                            )
+                            received_count += 1
+                            request_num += 1
+                            time.sleep(1)
+                    except socket.timeout:
                         print("请求超时。")
                         lost_count += 1
                         request_num += 1
                         time.sleep(1)
-                    else:
-                        print(f"无法连接到 {ip}:{port}。")
-                        lost_count += 1
-                        request_num += 1
-                        time.sleep(1)
+                    except (OSError, ConnectionRefusedError) as e:
+                        if isinstance(e, OSError) and e.errno == 10049:
+                            print("请求超时。")
+                            lost_count += 1
+                            request_num += 1
+                            time.sleep(1)
+                        else:
+                            print(f"无法连接到 {ip}:{port}。")
+                            lost_count += 1
+                            request_num += 1
+                            time.sleep(1)
 
         except KeyboardInterrupt:
             pass
@@ -146,6 +177,8 @@ def tcping(
 
         if ctrl_c_used:  # 如果使用 Ctrl+C，则仅打印“Control-C”
             print("Control-C")
+        elif continuous_ping and request_nums > 1:
+            print("[警告] 当同时使用 -t 和 -n 参数时，-t 参数将被忽略，而执行 -n 参数所指定的次数的 TCPing 操作.")
 
     except ValueError as e:
         print(e)
@@ -166,6 +199,7 @@ def main():
         f"{script_name} example.com 80 -h\n"
         f"{script_name} example.com 80 -i 128\n"
         f"{script_name} example.com 80 -n 4\n"
+        f"{script_name} example.com 80 -t\n"
         f"{script_name} example.com 80 -w 1000",
         usage="%(prog)s domain port [-4] [-6] [-d DNS_server] [-h] [-i TTL] [-n count] [-t] [-w timeout]",
         add_help=False,
@@ -215,9 +249,6 @@ def main():
         if args.request_nums < 1:
             args.request_nums = 4
 
-        if args.continuous_ping and args.request_nums > 0:
-            print("[警告] 同时使用 -t 和 -n 参数时，-t 参数将被忽略，仅执行指定次数的 TCPing 操作。")
-
         tcping(
             args.domain,
             args.port,
@@ -225,7 +256,7 @@ def main():
             args.force_ipv4,
             args.force_ipv6,
             args.timeout,
-            args.continuous_ping and args.request_nums == 0,  # 仅在不设置 -n 参数时生效
+            args.continuous_ping,
             args.ttl,
         )
 
