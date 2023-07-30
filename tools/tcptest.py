@@ -130,7 +130,8 @@ def main():
                                             f"{script_name} example.com 80 -i 128\n"
                                             f"{script_name} example.com 80 -n 4\n"
                                             f"{script_name} example.com 80 -t\n"
-                                            f"{script_name} example.com 80 -w 1000\n"
+                                            f"{script_name} example.com 80 -w 1000",
+                                    usage="%(prog)s domain port [-4] [-6] [-d DNS_server] [-h] [-i TTL] [-n count] [-t] [-w timeout]")
 
 
     parser.add_argument("domain", help="要 TCPing 的目标主机名。")
