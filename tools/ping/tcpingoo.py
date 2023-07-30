@@ -70,6 +70,9 @@ def tcping(
                 # 如果IPv4查询失败，则使用IPv6进行DNS查询
                 ip = resolve_ip(domain, force_ipv4=False)
 
+        if continuous_ping and request_nums > 1:
+            print("[警告] 当同时使用 -t 和 -n 参数时，-t 参数将被忽略，而执行 -n 参数所指定的次数的 TCPing 操作.")
+
         print(f"\n正在 TCPing {domain}:{port} [{ip}:{port}] 具有 32 字节的数据:")
         request_num = 1
         response_times = []
@@ -78,8 +81,7 @@ def tcping(
 
         try:
             if continuous_ping:
-                # 如果使用 -t 参数，忽略 -n 参数，持续 ping 目标主机
-                while not ctrl_c_used:
+                while request_num <= request_nums and not ctrl_c_used:
                     start_time = time.time()
                     try:
                         with socket.create_connection(
@@ -95,22 +97,27 @@ def tcping(
                                 f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL={ttl}"
                             )
                             received_count += 1
+                            request_num += 1
                             time.sleep(1)
                     except socket.timeout:
                         print("请求超时。")
                         lost_count += 1
+                        request_num += 1
                         time.sleep(1)
                     except (OSError, ConnectionRefusedError) as e:
                         if isinstance(e, OSError) and e.errno == 10049:
                             print("请求超时。")
                             lost_count += 1
+                            request_num += 1
                             time.sleep(1)
                         else:
                             print(f"无法连接到 {ip}:{port}。")
                             lost_count += 1
+                            request_num += 1
                             time.sleep(1)
             else:
-                # 如果没有使用 -t 参数，则执行 -n 参数指定次数的 ping 操作
+                # 修正请求的次数
+                request_nums = min(request_nums, 1)
                 while request_num <= request_nums and not ctrl_c_used:
                     start_time = time.time()
                     try:
@@ -177,8 +184,6 @@ def tcping(
 
         if ctrl_c_used:  # 如果使用 Ctrl+C，则仅打印“Control-C”
             print("Control-C")
-        elif continuous_ping and request_nums > 1:
-            print("[警告] 当同时使用 -t 和 -n 参数时，-t 参数将被忽略，而执行 -n 参数所指定的次数的 TCPing 操作.")
 
     except ValueError as e:
         print(e)
