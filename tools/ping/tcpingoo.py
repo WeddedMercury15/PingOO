@@ -4,7 +4,21 @@ import time
 import argparse
 import signal
 import os
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QFormLayout, QSpinBox, QCheckBox, QPlainTextEdit, QMessageBox, QDesktopWidget
+from PyQt5.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QFormLayout,
+    QSpinBox,
+    QCheckBox,
+    QPlainTextEdit,
+    QMessageBox,
+)
 
 
 # 添加此全局标志变量以跟踪是否使用了 Ctrl+C
@@ -73,11 +87,7 @@ def tcping(
                 # 如果IPv4查询失败，则使用IPv6进行DNS查询
                 ip = resolve_ip(domain, force_ipv4=False)
 
-        if output_text_edit:
-            output_text_edit.appendPlainText(
-                f"\n正在 TCPing {domain}:{port} [{ip}:{port}] 具有 32 字节的数据:"
-            )
-
+        output_text_edit.appendPlainText(f"\n正在 TCPing {domain}:{port} [{ip}:{port}] 具有 32 字节的数据:")
         request_num = 1
         response_times = []
         received_count = 0
@@ -99,29 +109,25 @@ def tcping(
                         end_time = time.time()
                         response_time = (end_time - start_time) * 1000  # 转换为毫秒
                         response_times.append(response_time)
-                        if output_text_edit:
-                            output_text_edit.appendPlainText(
-                                f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL={ttl}"
-                            )
+                        output_text_edit.appendPlainText(
+                            f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL={ttl}"
+                        )
                         received_count += 1
                         request_num += 1
                         time.sleep(1)
                 except socket.timeout:
-                    if output_text_edit:
-                        output_text_edit.appendPlainText("请求超时。")
+                    output_text_edit.appendPlainText("请求超时。")
                     lost_count += 1
                     request_num += 1
                     time.sleep(1)
                 except (OSError, ConnectionRefusedError) as e:
                     if isinstance(e, OSError) and e.errno == 10049:
-                        if output_text_edit:
-                            output_text_edit.appendPlainText("请求超时。")
+                        output_text_edit.appendPlainText("请求超时。")
                         lost_count += 1
                         request_num += 1
                         time.sleep(1)
                     else:
-                        if output_text_edit:
-                            output_text_edit.appendPlainText(f"无法连接到 {ip}:{port}。")
+                        output_text_edit.appendPlainText(f"无法连接到 {ip}:{port}。")
                         lost_count += 1
                         request_num += 1
                         time.sleep(1)
@@ -142,29 +148,24 @@ def tcping(
         min_delay = min(response_times) if received_count > 0 else 0.0
         max_delay = max(response_times) if received_count > 0 else 0.0
 
-        if output_text_edit:
-            output_text_edit.appendPlainText(f"\n{ip}:{port} 的 TCPing 统计信息:")
-            output_text_edit.appendPlainText(
-                f"    数据包: 已发送 = {total_packets_sent}, 已接收 = {received_count}，丢失 = {lost_count} ({packet_loss_rate:.1f}% 丢失)"
-            )
+        output_text_edit.appendPlainText(f"\n{ip}:{port} 的 TCPing 统计信息:")
+        output_text_edit.appendPlainText(
+            f"    数据包: 已发送 = {total_packets_sent}, 已接收 = {received_count}，丢失 = {lost_count} ({packet_loss_rate:.1f}% 丢失)"
+        )
 
         if received_count > 0:
-            if output_text_edit:
-                output_text_edit.appendPlainText("往返行程的估计时间(以毫秒为单位):")
-                output_text_edit.appendPlainText(
-                    f"    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms"
-                )
+            output_text_edit.appendPlainText("往返行程的估计时间(以毫秒为单位):")
+            output_text_edit.appendPlainText(
+                f"    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms"
+            )
         else:
-            if output_text_edit:
-                output_text_edit.appendPlainText("所有请求均超时，无法计算往返行程时间.")
+            output_text_edit.appendPlainText("所有请求均超时，无法计算往返行程时间.")
 
         if ctrl_c_used:  # 如果使用 Ctrl+C，则仅打印“Control-C”
-            if output_text_edit:
-                output_text_edit.appendPlainText("Control-C")
+            output_text_edit.appendPlainText("Control-C")
 
     except ValueError as e:
-        if output_text_edit:
-            output_text_edit.appendPlainText(str(e))
+        output_text_edit.appendPlainText(str(e))
 
 
 # 主窗口类
@@ -178,14 +179,14 @@ class TcpPingWindow(QMainWindow):
         self.setWindowTitle("TCP Ping工具")
         self.setGeometry(100, 100, 600, 400)
 
-        # 中心组件
-        central_widget = QWidget(self)
-        self.setCentralWidget(central_widget)
+        # 主部件
+        main_widget = QWidget(self)
+        self.setCentralWidget(main_widget)
 
         # 主布局
-        main_layout = QVBoxLayout(central_widget)
+        main_layout = QVBoxLayout(main_widget)
 
-        # 输入区域
+        # 输入部件
         input_widget = QWidget(self)
         input_layout = QFormLayout(input_widget)
 
@@ -194,9 +195,7 @@ class TcpPingWindow(QMainWindow):
         self.force_ipv4_check_box = QCheckBox("强制使用IPv4", self)
         self.force_ipv6_check_box = QCheckBox("强制使用IPv6", self)
         self.custom_dns_line_edit = QLineEdit(self)
-        self.continuous_ping_check_box = QCheckBox(
-            "连续Ping（Ctrl+Break或Ctrl+C停止）", self
-        )
+        self.continuous_ping_check_box = QCheckBox("连续Ping", self)
         self.ttl_spin_box = QSpinBox(self)
         self.request_num_spin_box = QSpinBox(self)
         self.timeout_spin_box = QSpinBox(self)
@@ -232,16 +231,6 @@ class TcpPingWindow(QMainWindow):
 
         ping_button.clicked.connect(self.ping_button_clicked)
         clear_button.clicked.connect(self.clear_button_clicked)
-
-        # 禁用“请求次数”输入框，只有当勾选连续ping时，该输入框才可用
-        self.continuous_ping_check_box.stateChanged.connect(
-            self.toggle_request_num_input
-        )
-        self.toggle_request_num_input()
-
-    def toggle_request_num_input(self):
-        enable = not self.continuous_ping_check_box.isChecked()
-        self.request_num_spin_box.setEnabled(enable)
 
     def ping_button_clicked(self):
         domain = self.domain_line_edit.text().strip()
@@ -297,96 +286,15 @@ class TcpPingWindow(QMainWindow):
         self.output_text_edit.clear()
 
 
-# 判断系统是否有图形界面
-def has_gui():
-    try:
-        from PyQt5.QtWidgets import QApplication
-
-        return QApplication.instance() is not None
-    except ImportError:
-        return False
-
-
 # 主函数
 def main():
     # 设置 SIGINT 的信号处理程序 (Ctrl+C)
     signal.signal(signal.SIGINT, signal_handler)
 
-    # 解析命令行参数
-    parser = argparse.ArgumentParser(
-        description="TCP Ping工具 - 使用TCP协议检查目标主机端口的可达性。",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="示例:\n"
-        "python tcpingoo.py example.com 80\n"
-        "python tcpingoo.py example.com 80 -4\n"
-        "python tcpingoo.py example.com 80 -6\n"
-        "python tcpingoo.py example.com 80 -d 1.1.1.1\n"
-        "python tcpingoo.py example.com 80 -h\n"
-        "python tcpingoo.py example.com 80 -i 128\n"
-        "python tcpingoo.py example.com 80 -n 4\n"
-        "python tcpingoo.py example.com 80 -t\n"
-        "python tcpingoo.py example.com 80 -w 1000",
-        usage="%(prog)s domain port [-4] [-6] [-d DNS_server] [-h] [-i TTL] [-n count] [-t] [-w timeout]",
-        add_help=False,
-    )
-
-    parser.add_argument("domain", nargs="?", help="要TCPing的目标主机名。")
-    parser.add_argument("port", nargs="?", type=int, help="目标主机的端口号。")
-    parser.add_argument("-4", dest="force_ipv4", action="store_true", help="强制使用IPv4。")
-    parser.add_argument("-6", dest="force_ipv6", action="store_true", help="强制使用IPv6。")
-    parser.add_argument(
-        "-d",
-        dest="dns_server",
-        metavar="DNS_server",
-        default=None,
-        help="自定义DNS服务器地址。",
-    )
-    parser.add_argument("-h", action="help", help="显示帮助信息并退出。")
-    parser.add_argument(
-        "-i", dest="ttl", metavar="TTL", type=int, default=128, help="生存时间。"
-    )
-    parser.add_argument(
-        "-n",
-        dest="request_nums",
-        metavar="count",
-        type=int,
-        default=4,
-        help="要发送的回显请求数。",
-    )
-    parser.add_argument(
-        "-t",
-        dest="continuous_ping",
-        action="store_true",
-        help="Ping指定的主机，直到停止。 若要查看统计信息并继续操作，请键入Ctrl+Break； 若要停止，请键入Ctrl+C。",
-    )
-    parser.add_argument(
-        "-w",
-        dest="timeout",
-        metavar="timeout",
-        type=int,
-        default=1000,
-        help="等待每次回复的超时时间(毫秒)。",
-    )
-
-    args = parser.parse_args()
-
-    try:
-        if args.request_nums < 1:
-            args.request_nums = 4
-
-        # 如果没有图形界面，则直接输出帮助信息
-        if not has_gui():
-            parser.print_help()
-            sys.exit(1)
-
-        # 启动图形界面
-        app = QApplication(sys.argv)
-        window = TcpPingWindow()
-        window.show()
-        sys.exit(app.exec_())
-
-    except ValueError as e:
-        print(e)
+    app = QApplication(sys.argv)
+    window = TcpPingWindow()
+    window.show()
+    sys.exit(app.exec_())
 
 
 if __name__ == "__main__":
