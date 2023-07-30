@@ -9,7 +9,7 @@ from ping3 import ping
 # 添加此全局标志变量以跟踪是否使用了 Ctrl+C
 ctrl_c_used = False
 
-# 自定义DNS解析异常类，用于抛出更具体的错误信息
+# 自定义 DNS 解析异常类，用于抛出更具体的错误信息
 def custom_gaierror(msg):
     class CustomGaiError(Exception):
         def __init__(self, message):
@@ -17,27 +17,27 @@ def custom_gaierror(msg):
 
     raise CustomGaiError(msg)
 
-# SIGINT信号处理程序 (Ctrl+C)
+# SIGINT 信号处理程序 (Ctrl+C)
 def signal_handler(sig, frame):
     global ctrl_c_used
     ctrl_c_used = True
 
-# 解析目标主机的IP地址
+# 解析目标主机的 IP 地址
 def resolve_ip(host, force_ipv4=False):
     try:
-        # 默认使用IPv4进行DNS查询
+        # 默认使用 IPv4 进行 DNS 查询
         family = socket.AF_INET if force_ipv4 else socket.AF_INET6
 
-        # 使用系统默认的DNS服务器进行查询
+        # 使用系统默认的 DNS 服务器进行查询
         addr_info = socket.getaddrinfo(host, None, family)
-        ip = addr_info[0][4][0]  # 获取IP地址
+        ip = addr_info[0][4][0]  # 获取 IP 地址
 
         return ip
 
     except socket.gaierror:
         raise ValueError(f"ICMPing 请求找不到主机 {host}。请检查该名称，然后重试.")
 
-# 检查主机名是否为IP地址
+# 检查主机名是否为 IP 地址
 def is_valid_ip(host):
     try:
         socket.inet_pton(socket.AF_INET, host)
@@ -53,7 +53,7 @@ def is_valid_ip(host):
 
     return False
 
-# 执行ICMP Ping操作，测量响应时间和丢包率
+# 执行 ICMP Ping 操作，测量响应时间和丢包率
 def icmping(
     hostname,
     request_nums,
@@ -66,20 +66,20 @@ def icmping(
     try:
         ip = None
 
-        # 根据参数设置DNS解析方式
+        # 根据参数设置 DNS 解析方式
         if force_ipv4:
-            # 如果使用 -4 参数，只使用IPv4进行DNS查询
+            # 如果使用 -4 参数，只使用 IPv4 进行 DNS 查询
             ip = resolve_ip(hostname, force_ipv4=True)
         elif force_ipv6:
-            # 如果使用 -6 参数，只使用IPv6进行DNS查询
+            # 如果使用 -6 参数，只使用 IPv6 进行 DNS 查询
             ip = resolve_ip(hostname, force_ipv4=False)
         else:
-            # 否则，根据系统的网络配置来选择DNS查询方式
+            # 否则，根据系统的网络配置来选择 DNS 查询方式
             try:
-                # 尝试使用IPv4进行DNS查询
+                # 尝试使用 IPv4 进行 DNS 查询
                 ip = resolve_ip(hostname, force_ipv4=True)
             except ValueError:
-                # 如果IPv4查询失败，则使用IPv6进行DNS查询
+                # 如果 IPv4 查询失败，则使用 IPv6 进行 DNS 查询
                 ip = resolve_ip(hostname, force_ipv4=False)
 
         if not is_valid_ip(hostname):
@@ -169,7 +169,7 @@ def main():
         add_help=False,
     )
 
-    parser.add_argument("hostname", help="要 ICMPing 的目标主机名或IP地址。")
+    parser.add_argument("hostname", help="要 ICMPing 的目标主机名或 IP 地址。")
     parser.add_argument("-4", dest="force_ipv4", action="store_true", help="强制使用 IPv4。")
     parser.add_argument("-6", dest="force_ipv6", action="store_true", help="强制使用 IPv6。")
     parser.add_argument("-h", action="help", help="显示帮助信息并退出。")
