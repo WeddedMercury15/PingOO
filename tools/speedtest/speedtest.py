@@ -8,7 +8,7 @@ class SpeedTestThread(QThread):
 
     def run(self):
         try:
-            # 模拟速度测试过程
+            # Simulate speed test process
             import time
             time.sleep(3)
             result = "测试结果：100 Mbps"
@@ -16,7 +16,7 @@ class SpeedTestThread(QThread):
         except Exception as e:
             self.speed_test_done.emit("测速失败。")
 
-class ResultFrame(QFrame):
+class SpeedTestCard(QFrame):
     def __init__(self):
         super().__init__()
 
@@ -39,7 +39,24 @@ class ResultFrame(QFrame):
         vbox.addWidget(self.result_label)
         vbox.addWidget(self.start_button)
 
+        self.extra_button = QPushButton("额外功能", self)
+        self.extra_button.setFont(font)
+        hbox = QHBoxLayout()
+        hbox.addWidget(self.extra_button)
+        vbox.addLayout(hbox)
+
         self.setLayout(vbox)
+
+        # Set frame style with custom CSS
+        self.setStyleSheet(
+            """
+            QFrame {
+                border: 2px solid #007BFF;
+                border-radius: 10px;
+                padding: 10px;
+            }
+            """
+        )
 
     def start_speed_test(self):
         self.start_button.setEnabled(False)
@@ -52,40 +69,6 @@ class ResultFrame(QFrame):
     def on_speed_test_done(self, result):
         self.result_label.setText(result)
         self.start_button.setEnabled(True)
-
-class SpeedTestCard(QFrame):
-    def __init__(self):
-        super().__init__()
-
-        self.init_ui()
-
-    def init_ui(self):
-        font = QFont("Arial", 12)
-
-        vbox = QVBoxLayout()
-
-        self.group_box = ResultFrame()  # 将 ResultFrame 用于当前结果框
-
-        vbox.addWidget(self.group_box)
-
-        self.extra_button = QPushButton("额外功能", self)
-        self.extra_button.setFont(font)
-        hbox = QHBoxLayout()
-        hbox.addWidget(self.extra_button)
-        vbox.addLayout(hbox)
-
-        self.setLayout(vbox)
-
-        # 使用自定义 CSS 为其他卡片设置框架样式
-        self.setStyleSheet(
-            """
-            QFrame {
-                border: 2px solid #007BFF;
-                border-radius: 10px;
-                padding: 10px;
-            }
-            """
-        )
 
 class SpeedTestApp(QMainWindow):
     def __init__(self):
