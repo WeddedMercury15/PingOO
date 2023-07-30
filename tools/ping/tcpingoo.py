@@ -77,7 +77,7 @@ def tcping(
         lost_count = 0
 
         try:
-            while continuous_ping or request_num <= request_nums:
+            while not continuous_ping and request_num <= request_nums:
                 if ctrl_c_used:  # 检查是否使用了 Ctrl+C
                     break
 
@@ -166,7 +166,6 @@ def main():
         f"{script_name} example.com 80 -h\n"
         f"{script_name} example.com 80 -i 128\n"
         f"{script_name} example.com 80 -n 4\n"
-        f"{script_name} example.com 80 -t\n"
         f"{script_name} example.com 80 -w 1000",
         usage="%(prog)s domain port [-4] [-6] [-d DNS_server] [-h] [-i TTL] [-n count] [-t] [-w timeout]",
         add_help=False,
@@ -216,6 +215,9 @@ def main():
         if args.request_nums < 1:
             args.request_nums = 4
 
+        if args.continuous_ping and args.request_nums > 0:
+            print("[警告]：同时使用 -t 和 -n 参数时，-t 参数将被忽略，仅执行指定次数的 TCP Ping 操作。")
+
         tcping(
             args.domain,
             args.port,
@@ -223,7 +225,7 @@ def main():
             args.force_ipv4,
             args.force_ipv6,
             args.timeout,
-            args.continuous_ping,
+            args.continuous_ping and args.request_nums == 0,  # 仅在不设置 -n 参数时生效
             args.ttl,
         )
 
