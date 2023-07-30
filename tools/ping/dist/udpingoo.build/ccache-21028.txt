@@ -1,0 +1,379 @@
+[2023-07-30T16:37:15.019352 40384] === CCACHE 4.6 STARTED =========================================
+[2023-07-30T16:37:15.019352 40384] Config: (default) absolute_paths_in_stderr = false
+[2023-07-30T16:37:15.019352 40384] Config: (default) base_dir = 
+[2023-07-30T16:37:15.019352 40384] Config: (environment) cache_dir = C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache
+[2023-07-30T16:37:15.019352 40384] Config: (default) compiler = 
+[2023-07-30T16:37:15.019352 40384] Config: (default) compiler_check = mtime
+[2023-07-30T16:37:15.019352 40384] Config: (default) compiler_type = auto
+[2023-07-30T16:37:15.019352 40384] Config: (default) compression = true
+[2023-07-30T16:37:15.019352 40384] Config: (default) compression_level = 0
+[2023-07-30T16:37:15.019352 40384] Config: (default) cpp_extension = 
+[2023-07-30T16:37:15.019352 40384] Config: (default) debug = false
+[2023-07-30T16:37:15.019352 40384] Config: (default) debug_dir = 
+[2023-07-30T16:37:15.019352 40384] Config: (default) depend_mode = false
+[2023-07-30T16:37:15.019352 40384] Config: (default) direct_mode = true
+[2023-07-30T16:37:15.019352 40384] Config: (default) disable = false
+[2023-07-30T16:37:15.019352 40384] Config: (default) extra_files_to_hash = 
+[2023-07-30T16:37:15.019352 40384] Config: (default) file_clone = false
+[2023-07-30T16:37:15.019352 40384] Config: (default) hard_link = false
+[2023-07-30T16:37:15.019352 40384] Config: (default) hash_dir = true
+[2023-07-30T16:37:15.019352 40384] Config: (default) ignore_headers_in_manifest = 
+[2023-07-30T16:37:15.019352 40384] Config: (default) ignore_options = 
+[2023-07-30T16:37:15.019352 40384] Config: (default) inode_cache = false
+[2023-07-30T16:37:15.019352 40384] Config: (default) keep_comments_cpp = false
+[2023-07-30T16:37:15.019352 40384] Config: (default) limit_multiple = 0.8
+[2023-07-30T16:37:15.019352 40384] Config: (environment) log_file = D:\Git\PingOO\tools\ping\dist\udpingoo.build\ccache-21028.txt
+[2023-07-30T16:37:15.019352 40384] Config: (default) max_files = 0
+[2023-07-30T16:37:15.019352 40384] Config: (default) max_size = 5.0G
+[2023-07-30T16:37:15.019352 40384] Config: (default) namespace = 
+[2023-07-30T16:37:15.019352 40384] Config: (default) path = 
+[2023-07-30T16:37:15.019352 40384] Config: (default) pch_external_checksum = false
+[2023-07-30T16:37:15.019352 40384] Config: (default) prefix_command = 
+[2023-07-30T16:37:15.019352 40384] Config: (default) prefix_command_cpp = 
+[2023-07-30T16:37:15.019352 40384] Config: (default) read_only = false
+[2023-07-30T16:37:15.019352 40384] Config: (default) read_only_direct = false
+[2023-07-30T16:37:15.019352 40384] Config: (default) recache = false
+[2023-07-30T16:37:15.019352 40384] Config: (default) reshare = false
+[2023-07-30T16:37:15.019352 40384] Config: (default) run_second_cpp = true
+[2023-07-30T16:37:15.019352 40384] Config: (default) secondary_storage = 
+[2023-07-30T16:37:15.019352 40384] Config: (environment) sloppiness = include_file_mtime, include_file_ctime
+[2023-07-30T16:37:15.019352 40384] Config: (default) stats = true
+[2023-07-30T16:37:15.019352 40384] Config: (default) stats_log = 
+[2023-07-30T16:37:15.019352 40384] Config: (default) temporary_dir = C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/tmp
+[2023-07-30T16:37:15.019352 40384] Config: (default) umask = 
+[2023-07-30T16:37:15.019352 40384] Command line: C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\downloads\ccache\v4.6\ccache.exe C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\downloads\gcc\x86\11.3.0-14.0.3-10.0.0-msvcrt-r3\mingw32\bin\gcc.exe -o __constants.o -c -std=c11 -fvisibility=hidden -fwrapv -pipe -fpartial-inlining -ftrack-macro-expansion=0 -Wno-deprecated-declarations -fno-var-tracking -Wno-misleading-indentation -fcompare-debug-second -O3 -D_WIN32_WINNT=0x0501 -D__NUITKA_NO_ASSERT__ -D_NUITKA_STANDALONE -D_NUITKA_ONEFILE_MODE -D_NUITKA_ONEFILE_TEMP_BOOL -D_NUITKA_CONSTANTS_FROM_RESOURCE -D_NUITKA_FROZEN=155 -D_NUITKA_EXE -ID:\Software\Python311-32\include -I. -ID:\Software\PYTHON~2\Lib\SITE-P~1\nuitka\build\include -ID:\Software\PYTHON~2\Lib\SITE-P~1\nuitka\build\static_src __constants.c
+[2023-07-30T16:37:15.027361 40384] Hostname: Mi-PC
+[2023-07-30T16:37:15.027361 40384] Working directory: D:/Git/PingOO/tools/ping/dist/udpingoo.build
+[2023-07-30T16:37:15.027361 40384] Compiler type: gcc
+[2023-07-30T16:37:15.027361 40384] Source file: __constants.c
+[2023-07-30T16:37:15.027361 40384] Object file: __constants.o
+[2023-07-30T16:37:15.028395 40384] Trying direct lookup
+[2023-07-30T16:37:15.028395 40384] Retrieved 89fb4oful3k47lkdbsc44if9clbino9ja from primary storage (C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/8/9/fb4oful3k47lkdbsc44if9clbino9jaM)
+[2023-07-30T16:37:15.028395 40384] Looking for result key in C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/8/9/fb4oful3k47lkdbsc44if9clbino9jaM
+[2023-07-30T16:37:15.033392 6108 ] === CCACHE 4.6 STARTED =========================================
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) absolute_paths_in_stderr = false
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) base_dir = 
+[2023-07-30T16:37:15.033392 6108 ] Config: (environment) cache_dir = C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) compiler = 
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) compiler_check = mtime
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) compiler_type = auto
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) compression = true
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) compression_level = 0
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) cpp_extension = 
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) debug = false
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) debug_dir = 
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) depend_mode = false
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) direct_mode = true
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) disable = false
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) extra_files_to_hash = 
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) file_clone = false
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) hard_link = false
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) hash_dir = true
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) ignore_headers_in_manifest = 
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) ignore_options = 
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) inode_cache = false
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) keep_comments_cpp = false
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) limit_multiple = 0.8
+[2023-07-30T16:37:15.033392 6108 ] Config: (environment) log_file = D:\Git\PingOO\tools\ping\dist\udpingoo.build\ccache-21028.txt
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) max_files = 0
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) max_size = 5.0G
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) namespace = 
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) path = 
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) pch_external_checksum = false
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) prefix_command = 
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) prefix_command_cpp = 
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) read_only = false
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) read_only_direct = false
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) recache = false
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) reshare = false
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) run_second_cpp = true
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) secondary_storage = 
+[2023-07-30T16:37:15.033392 6108 ] Config: (environment) sloppiness = include_file_mtime, include_file_ctime
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) stats = true
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) stats_log = 
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) temporary_dir = C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/tmp
+[2023-07-30T16:37:15.033392 6108 ] Config: (default) umask = 
+[2023-07-30T16:37:15.034375 6108 ] Command line: C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\downloads\ccache\v4.6\ccache.exe C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\downloads\gcc\x86\11.3.0-14.0.3-10.0.0-msvcrt-r3\mingw32\bin\gcc.exe -o __helpers.o -c -std=c11 -fvisibility=hidden -fwrapv -pipe -fpartial-inlining -ftrack-macro-expansion=0 -Wno-deprecated-declarations -fno-var-tracking -Wno-misleading-indentation -fcompare-debug-second -O3 -D_WIN32_WINNT=0x0501 -D__NUITKA_NO_ASSERT__ -D_NUITKA_STANDALONE -D_NUITKA_ONEFILE_MODE -D_NUITKA_ONEFILE_TEMP_BOOL -D_NUITKA_CONSTANTS_FROM_RESOURCE -D_NUITKA_FROZEN=155 -D_NUITKA_EXE -ID:\Software\Python311-32\include -I. -ID:\Software\PYTHON~2\Lib\SITE-P~1\nuitka\build\include -ID:\Software\PYTHON~2\Lib\SITE-P~1\nuitka\build\static_src __helpers.c
+[2023-07-30T16:37:15.039380 6108 ] Hostname: Mi-PC
+[2023-07-30T16:37:15.039380 6108 ] Working directory: D:/Git/PingOO/tools/ping/dist/udpingoo.build
+[2023-07-30T16:37:15.039380 6108 ] Compiler type: gcc
+[2023-07-30T16:37:15.040395 6108 ] Source file: __helpers.c
+[2023-07-30T16:37:15.040395 6108 ] Object file: __helpers.o
+[2023-07-30T16:37:15.040395 6108 ] Trying direct lookup
+[2023-07-30T16:37:15.040395 6108 ] Retrieved 08e32knpstlqdi4li34mqmq9rnm265b3e from primary storage (C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/0/8/e32knpstlqdi4li34mqmq9rnm265b3eM)
+[2023-07-30T16:37:15.041382 6108 ] Looking for result key in C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/0/8/e32knpstlqdi4li34mqmq9rnm265b3eM
+[2023-07-30T16:37:15.042384 38364] === CCACHE 4.6 STARTED =========================================
+[2023-07-30T16:37:15.042384 38364] Config: (default) absolute_paths_in_stderr = false
+[2023-07-30T16:37:15.042384 38364] Config: (default) base_dir = 
+[2023-07-30T16:37:15.042384 38364] Config: (environment) cache_dir = C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache
+[2023-07-30T16:37:15.042384 38364] Config: (default) compiler = 
+[2023-07-30T16:37:15.042384 38364] Config: (default) compiler_check = mtime
+[2023-07-30T16:37:15.042384 38364] Config: (default) compiler_type = auto
+[2023-07-30T16:37:15.042384 38364] Config: (default) compression = true
+[2023-07-30T16:37:15.042384 38364] Config: (default) compression_level = 0
+[2023-07-30T16:37:15.042384 38364] Config: (default) cpp_extension = 
+[2023-07-30T16:37:15.042384 38364] Config: (default) debug = false
+[2023-07-30T16:37:15.042384 38364] Config: (default) debug_dir = 
+[2023-07-30T16:37:15.042384 38364] Config: (default) depend_mode = false
+[2023-07-30T16:37:15.042384 38364] Config: (default) direct_mode = true
+[2023-07-30T16:37:15.042384 38364] Config: (default) disable = false
+[2023-07-30T16:37:15.042384 38364] Config: (default) extra_files_to_hash = 
+[2023-07-30T16:37:15.042384 38364] Config: (default) file_clone = false
+[2023-07-30T16:37:15.042384 38364] Config: (default) hard_link = false
+[2023-07-30T16:37:15.042384 38364] Config: (default) hash_dir = true
+[2023-07-30T16:37:15.042384 38364] Config: (default) ignore_headers_in_manifest = 
+[2023-07-30T16:37:15.042384 38364] Config: (default) ignore_options = 
+[2023-07-30T16:37:15.042384 38364] Config: (default) inode_cache = false
+[2023-07-30T16:37:15.042384 38364] Config: (default) keep_comments_cpp = false
+[2023-07-30T16:37:15.042384 38364] Config: (default) limit_multiple = 0.8
+[2023-07-30T16:37:15.042384 38364] Config: (environment) log_file = D:\Git\PingOO\tools\ping\dist\udpingoo.build\ccache-21028.txt
+[2023-07-30T16:37:15.042384 38364] Config: (default) max_files = 0
+[2023-07-30T16:37:15.042384 38364] Config: (default) max_size = 5.0G
+[2023-07-30T16:37:15.042384 38364] Config: (default) namespace = 
+[2023-07-30T16:37:15.042384 38364] Config: (default) path = 
+[2023-07-30T16:37:15.042384 38364] Config: (default) pch_external_checksum = false
+[2023-07-30T16:37:15.042384 38364] Config: (default) prefix_command = 
+[2023-07-30T16:37:15.042384 38364] Config: (default) prefix_command_cpp = 
+[2023-07-30T16:37:15.042384 38364] Config: (default) read_only = false
+[2023-07-30T16:37:15.042384 38364] Config: (default) read_only_direct = false
+[2023-07-30T16:37:15.042384 38364] Config: (default) recache = false
+[2023-07-30T16:37:15.042384 38364] Config: (default) reshare = false
+[2023-07-30T16:37:15.042384 38364] Config: (default) run_second_cpp = true
+[2023-07-30T16:37:15.042384 38364] Config: (default) secondary_storage = 
+[2023-07-30T16:37:15.042384 38364] Config: (environment) sloppiness = include_file_mtime, include_file_ctime
+[2023-07-30T16:37:15.042384 38364] Config: (default) stats = true
+[2023-07-30T16:37:15.042384 38364] Config: (default) stats_log = 
+[2023-07-30T16:37:15.042384 38364] Config: (default) temporary_dir = C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/tmp
+[2023-07-30T16:37:15.042384 38364] Config: (default) umask = 
+[2023-07-30T16:37:15.042384 38364] Command line: C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\downloads\ccache\v4.6\ccache.exe C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\downloads\gcc\x86\11.3.0-14.0.3-10.0.0-msvcrt-r3\mingw32\bin\gcc.exe -o __loader.o -c -std=c11 -fvisibility=hidden -fwrapv -pipe -fpartial-inlining -ftrack-macro-expansion=0 -Wno-deprecated-declarations -fno-var-tracking -Wno-misleading-indentation -fcompare-debug-second -O3 -D_WIN32_WINNT=0x0501 -D__NUITKA_NO_ASSERT__ -D_NUITKA_STANDALONE -D_NUITKA_ONEFILE_MODE -D_NUITKA_ONEFILE_TEMP_BOOL -D_NUITKA_CONSTANTS_FROM_RESOURCE -D_NUITKA_FROZEN=155 -D_NUITKA_EXE -ID:\Software\Python311-32\include -I. -ID:\Software\PYTHON~2\Lib\SITE-P~1\nuitka\build\include -ID:\Software\PYTHON~2\Lib\SITE-P~1\nuitka\build\static_src __loader.c
+[2023-07-30T16:37:15.048409 38364] Hostname: Mi-PC
+[2023-07-30T16:37:15.048409 38364] Working directory: D:/Git/PingOO/tools/ping/dist/udpingoo.build
+[2023-07-30T16:37:15.048409 38364] Compiler type: gcc
+[2023-07-30T16:37:15.048409 38364] Source file: __loader.c
+[2023-07-30T16:37:15.048409 38364] Object file: __loader.o
+[2023-07-30T16:37:15.049407 38364] Trying direct lookup
+[2023-07-30T16:37:15.049407 38364] Retrieved b65crotp028fb328vec80jg0ion5j6at2 from primary storage (C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/b/6/5crotp028fb328vec80jg0ion5j6at2M)
+[2023-07-30T16:37:15.049407 38364] Looking for result key in C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/b/6/5crotp028fb328vec80jg0ion5j6at2M
+[2023-07-30T16:37:15.056412 40396] === CCACHE 4.6 STARTED =========================================
+[2023-07-30T16:37:15.056412 40396] Config: (default) absolute_paths_in_stderr = false
+[2023-07-30T16:37:15.056412 40396] Config: (default) base_dir = 
+[2023-07-30T16:37:15.056412 40396] Config: (environment) cache_dir = C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache
+[2023-07-30T16:37:15.056412 40396] Config: (default) compiler = 
+[2023-07-30T16:37:15.056412 40396] Config: (default) compiler_check = mtime
+[2023-07-30T16:37:15.056412 40396] Config: (default) compiler_type = auto
+[2023-07-30T16:37:15.056412 40396] Config: (default) compression = true
+[2023-07-30T16:37:15.056412 40396] Config: (default) compression_level = 0
+[2023-07-30T16:37:15.056412 40396] Config: (default) cpp_extension = 
+[2023-07-30T16:37:15.056412 40396] Config: (default) debug = false
+[2023-07-30T16:37:15.056412 40396] Config: (default) debug_dir = 
+[2023-07-30T16:37:15.056412 40396] Config: (default) depend_mode = false
+[2023-07-30T16:37:15.056412 40396] Config: (default) direct_mode = true
+[2023-07-30T16:37:15.056412 40396] Config: (default) disable = false
+[2023-07-30T16:37:15.056412 40396] Config: (default) extra_files_to_hash = 
+[2023-07-30T16:37:15.056412 40396] Config: (default) file_clone = false
+[2023-07-30T16:37:15.056412 40396] Config: (default) hard_link = false
+[2023-07-30T16:37:15.056412 40396] Config: (default) hash_dir = true
+[2023-07-30T16:37:15.056412 40396] Config: (default) ignore_headers_in_manifest = 
+[2023-07-30T16:37:15.056412 40396] Config: (default) ignore_options = 
+[2023-07-30T16:37:15.056412 40396] Config: (default) inode_cache = false
+[2023-07-30T16:37:15.056412 40396] Config: (default) keep_comments_cpp = false
+[2023-07-30T16:37:15.056412 40396] Config: (default) limit_multiple = 0.8
+[2023-07-30T16:37:15.056412 40396] Config: (environment) log_file = D:\Git\PingOO\tools\ping\dist\udpingoo.build\ccache-21028.txt
+[2023-07-30T16:37:15.056412 40396] Config: (default) max_files = 0
+[2023-07-30T16:37:15.056412 40396] Config: (default) max_size = 5.0G
+[2023-07-30T16:37:15.056412 40396] Config: (default) namespace = 
+[2023-07-30T16:37:15.056412 40396] Config: (default) path = 
+[2023-07-30T16:37:15.056412 40396] Config: (default) pch_external_checksum = false
+[2023-07-30T16:37:15.056412 40396] Config: (default) prefix_command = 
+[2023-07-30T16:37:15.056412 40396] Config: (default) prefix_command_cpp = 
+[2023-07-30T16:37:15.056412 40396] Config: (default) read_only = false
+[2023-07-30T16:37:15.056412 40396] Config: (default) read_only_direct = false
+[2023-07-30T16:37:15.056412 40396] Config: (default) recache = false
+[2023-07-30T16:37:15.056412 40396] Config: (default) reshare = false
+[2023-07-30T16:37:15.056412 40396] Config: (default) run_second_cpp = true
+[2023-07-30T16:37:15.056412 40396] Config: (default) secondary_storage = 
+[2023-07-30T16:37:15.056412 40396] Config: (environment) sloppiness = include_file_mtime, include_file_ctime
+[2023-07-30T16:37:15.056412 40396] Config: (default) stats = true
+[2023-07-30T16:37:15.056412 40396] Config: (default) stats_log = 
+[2023-07-30T16:37:15.056412 40396] Config: (default) temporary_dir = C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/tmp
+[2023-07-30T16:37:15.056412 40396] Config: (default) umask = 
+[2023-07-30T16:37:15.056412 40396] Command line: C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\downloads\ccache\v4.6\ccache.exe C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\downloads\gcc\x86\11.3.0-14.0.3-10.0.0-msvcrt-r3\mingw32\bin\gcc.exe -o module.__main__.o -c -std=c11 -fvisibility=hidden -fwrapv -pipe -fpartial-inlining -ftrack-macro-expansion=0 -Wno-deprecated-declarations -fno-var-tracking -Wno-misleading-indentation -fcompare-debug-second -O3 -D_WIN32_WINNT=0x0501 -D__NUITKA_NO_ASSERT__ -D_NUITKA_STANDALONE -D_NUITKA_ONEFILE_MODE -D_NUITKA_ONEFILE_TEMP_BOOL -D_NUITKA_CONSTANTS_FROM_RESOURCE -D_NUITKA_FROZEN=155 -D_NUITKA_EXE -ID:\Software\Python311-32\include -I. -ID:\Software\PYTHON~2\Lib\SITE-P~1\nuitka\build\include -ID:\Software\PYTHON~2\Lib\SITE-P~1\nuitka\build\static_src module.__main__.c
+[2023-07-30T16:37:15.061928 40396] Hostname: Mi-PC
+[2023-07-30T16:37:15.061928 40396] Working directory: D:/Git/PingOO/tools/ping/dist/udpingoo.build
+[2023-07-30T16:37:15.061928 40396] Compiler type: gcc
+[2023-07-30T16:37:15.061928 40396] Source file: module.__main__.c
+[2023-07-30T16:37:15.061928 40396] Object file: module.__main__.o
+[2023-07-30T16:37:15.061928 40396] Trying direct lookup
+[2023-07-30T16:37:15.062927 40396] No aef0nr1bu0klr4pmjoe4nmptecrfag9t4 in primary storage
+[2023-07-30T16:37:15.063931 40396] Running preprocessor
+[2023-07-30T16:37:15.065931 5116 ] === CCACHE 4.6 STARTED =========================================
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) absolute_paths_in_stderr = false
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) base_dir = 
+[2023-07-30T16:37:15.065931 5116 ] Config: (environment) cache_dir = C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) compiler = 
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) compiler_check = mtime
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) compiler_type = auto
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) compression = true
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) compression_level = 0
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) cpp_extension = 
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) debug = false
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) debug_dir = 
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) depend_mode = false
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) direct_mode = true
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) disable = false
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) extra_files_to_hash = 
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) file_clone = false
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) hard_link = false
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) hash_dir = true
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) ignore_headers_in_manifest = 
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) ignore_options = 
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) inode_cache = false
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) keep_comments_cpp = false
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) limit_multiple = 0.8
+[2023-07-30T16:37:15.065931 5116 ] Config: (environment) log_file = D:\Git\PingOO\tools\ping\dist\udpingoo.build\ccache-21028.txt
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) max_files = 0
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) max_size = 5.0G
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) namespace = 
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) path = 
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) pch_external_checksum = false
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) prefix_command = 
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) prefix_command_cpp = 
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) read_only = false
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) read_only_direct = false
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) recache = false
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) reshare = false
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) run_second_cpp = true
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) secondary_storage = 
+[2023-07-30T16:37:15.065931 5116 ] Config: (environment) sloppiness = include_file_mtime, include_file_ctime
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) stats = true
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) stats_log = 
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) temporary_dir = C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/tmp
+[2023-07-30T16:37:15.065931 5116 ] Config: (default) umask = 
+[2023-07-30T16:37:15.065931 5116 ] Command line: C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\downloads\ccache\v4.6\ccache.exe C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\downloads\gcc\x86\11.3.0-14.0.3-10.0.0-msvcrt-r3\mingw32\bin\gcc.exe -o static_src\MainProgram.o -c -std=c11 -fvisibility=hidden -fwrapv -pipe -fpartial-inlining -ftrack-macro-expansion=0 -Wno-deprecated-declarations -fno-var-tracking -Wno-misleading-indentation -fcompare-debug-second -O3 -D_WIN32_WINNT=0x0501 -D__NUITKA_NO_ASSERT__ -D_NUITKA_STANDALONE -D_NUITKA_ONEFILE_MODE -D_NUITKA_ONEFILE_TEMP_BOOL -D_NUITKA_CONSTANTS_FROM_RESOURCE -D_NUITKA_FROZEN=155 -D_NUITKA_EXE -ID:\Software\Python311-32\include -I. -ID:\Software\PYTHON~2\Lib\SITE-P~1\nuitka\build\include -ID:\Software\PYTHON~2\Lib\SITE-P~1\nuitka\build\static_src static_src\MainProgram.c
+[2023-07-30T16:37:15.067941 38364] Got result key from manifest
+[2023-07-30T16:37:15.067941 38364] Retrieved 205ai9n1949p18254sob5jhk8anlfo404 from primary storage (C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/2/0/5ai9n1949p18254sob5jhk8anlfo404R)
+[2023-07-30T16:37:15.068927 38364] Reading embedded entry #0 .o (19569 bytes)
+[2023-07-30T16:37:15.068927 38364] Writing to __loader.o
+[2023-07-30T16:37:15.068927 38364] Succeeded getting cached result
+[2023-07-30T16:37:15.068927 38364] Result: direct_cache_hit
+[2023-07-30T16:37:15.068927 38364] Result: primary_storage_hit
+[2023-07-30T16:37:15.069928 38364] Acquired lock C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/d/c/stats.lock
+[2023-07-30T16:37:15.070927 38364] Releasing lock C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/d/c/stats.lock
+[2023-07-30T16:37:15.071931 5116 ] Hostname: Mi-PC
+[2023-07-30T16:37:15.071931 5116 ] Working directory: D:/Git/PingOO/tools/ping/dist/udpingoo.build
+[2023-07-30T16:37:15.071931 5116 ] Compiler type: gcc
+[2023-07-30T16:37:15.072928 5116 ] Source file: static_src\MainProgram.c
+[2023-07-30T16:37:15.072928 5116 ] Object file: static_src\MainProgram.o
+[2023-07-30T16:37:15.072928 5116 ] Trying direct lookup
+[2023-07-30T16:37:15.072928 5116 ] Retrieved 65a90l8cnuel7t87t10t2jnt10hs9evic from primary storage (C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/6/5/a90l8cnuel7t87t10t2jnt10hs9evicM)
+[2023-07-30T16:37:15.072928 5116 ] Looking for result key in C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/6/5/a90l8cnuel7t87t10t2jnt10hs9evicM
+[2023-07-30T16:37:15.074937 40384] Got result key from manifest
+[2023-07-30T16:37:15.074937 40384] Retrieved 1d580o91r121i4vr7k6fuphphbfldbqs6 from primary storage (C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/1/d/580o91r121i4vr7k6fuphphbfldbqs6R)
+[2023-07-30T16:37:15.075936 40384] Reading embedded entry #0 .o (2707 bytes)
+[2023-07-30T16:37:15.075936 40384] Writing to __constants.o
+[2023-07-30T16:37:15.075936 40384] Succeeded getting cached result
+[2023-07-30T16:37:15.075936 40384] Result: direct_cache_hit
+[2023-07-30T16:37:15.075936 40384] Result: primary_storage_hit
+[2023-07-30T16:37:15.076939 40384] Acquired lock C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/c/0/stats.lock
+[2023-07-30T16:37:15.077937 40384] Releasing lock C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/c/0/stats.lock
+[2023-07-30T16:37:15.083935 6108 ] Got result key from manifest
+[2023-07-30T16:37:15.083935 6108 ] Retrieved 2338e5lp3rf8fo0v6m2qrbrqaqn9dirfo from primary storage (C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/2/3/38e5lp3rf8fo0v6m2qrbrqaqn9dirfoR)
+[2023-07-30T16:37:15.084938 6108 ] Reading embedded entry #0 .o (454 bytes)
+[2023-07-30T16:37:15.084938 6108 ] Writing to __helpers.o
+[2023-07-30T16:37:15.084938 6108 ] Succeeded getting cached result
+[2023-07-30T16:37:15.084938 6108 ] Result: direct_cache_hit
+[2023-07-30T16:37:15.084938 6108 ] Result: primary_storage_hit
+[2023-07-30T16:37:15.084938 6108 ] Acquired lock C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/d/c/stats.lock
+[2023-07-30T16:37:15.085935 6108 ] Releasing lock C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/d/c/stats.lock
+[2023-07-30T16:37:15.122996 5116 ] Got result key from manifest
+[2023-07-30T16:37:15.123997 5116 ] Retrieved 987e9sht5m46v6no4mo038mdtg2h90rt0 from primary storage (C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/9/8/7e9sht5m46v6no4mo038mdtg2h90rt0R)
+[2023-07-30T16:37:15.123997 5116 ] Reading embedded entry #0 .o (9625 bytes)
+[2023-07-30T16:37:15.123997 5116 ] Writing to static_src\MainProgram.o
+[2023-07-30T16:37:15.125515 5116 ] Succeeded getting cached result
+[2023-07-30T16:37:15.125515 5116 ] Result: direct_cache_hit
+[2023-07-30T16:37:15.125515 5116 ] Result: primary_storage_hit
+[2023-07-30T16:37:15.126528 5116 ] Acquired lock C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/f/c/stats.lock
+[2023-07-30T16:37:15.127528 5116 ] Releasing lock C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/f/c/stats.lock
+[2023-07-30T16:37:15.219131 15552] === CCACHE 4.6 STARTED =========================================
+[2023-07-30T16:37:15.219131 15552] Config: (default) absolute_paths_in_stderr = false
+[2023-07-30T16:37:15.219131 15552] Config: (default) base_dir = 
+[2023-07-30T16:37:15.219131 15552] Config: (environment) cache_dir = C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache
+[2023-07-30T16:37:15.219131 15552] Config: (default) compiler = 
+[2023-07-30T16:37:15.219131 15552] Config: (default) compiler_check = mtime
+[2023-07-30T16:37:15.219131 15552] Config: (default) compiler_type = auto
+[2023-07-30T16:37:15.219131 15552] Config: (default) compression = true
+[2023-07-30T16:37:15.219131 15552] Config: (default) compression_level = 0
+[2023-07-30T16:37:15.219131 15552] Config: (default) cpp_extension = 
+[2023-07-30T16:37:15.219131 15552] Config: (default) debug = false
+[2023-07-30T16:37:15.219131 15552] Config: (default) debug_dir = 
+[2023-07-30T16:37:15.219131 15552] Config: (default) depend_mode = false
+[2023-07-30T16:37:15.219131 15552] Config: (default) direct_mode = true
+[2023-07-30T16:37:15.219131 15552] Config: (default) disable = false
+[2023-07-30T16:37:15.219131 15552] Config: (default) extra_files_to_hash = 
+[2023-07-30T16:37:15.219131 15552] Config: (default) file_clone = false
+[2023-07-30T16:37:15.219131 15552] Config: (default) hard_link = false
+[2023-07-30T16:37:15.219131 15552] Config: (default) hash_dir = true
+[2023-07-30T16:37:15.219131 15552] Config: (default) ignore_headers_in_manifest = 
+[2023-07-30T16:37:15.219131 15552] Config: (default) ignore_options = 
+[2023-07-30T16:37:15.219131 15552] Config: (default) inode_cache = false
+[2023-07-30T16:37:15.219131 15552] Config: (default) keep_comments_cpp = false
+[2023-07-30T16:37:15.219131 15552] Config: (default) limit_multiple = 0.8
+[2023-07-30T16:37:15.219131 15552] Config: (environment) log_file = D:\Git\PingOO\tools\ping\dist\udpingoo.build\ccache-21028.txt
+[2023-07-30T16:37:15.219131 15552] Config: (default) max_files = 0
+[2023-07-30T16:37:15.219131 15552] Config: (default) max_size = 5.0G
+[2023-07-30T16:37:15.219131 15552] Config: (default) namespace = 
+[2023-07-30T16:37:15.219131 15552] Config: (default) path = 
+[2023-07-30T16:37:15.219131 15552] Config: (default) pch_external_checksum = false
+[2023-07-30T16:37:15.219131 15552] Config: (default) prefix_command = 
+[2023-07-30T16:37:15.219131 15552] Config: (default) prefix_command_cpp = 
+[2023-07-30T16:37:15.219131 15552] Config: (default) read_only = false
+[2023-07-30T16:37:15.219131 15552] Config: (default) read_only_direct = false
+[2023-07-30T16:37:15.219131 15552] Config: (default) recache = false
+[2023-07-30T16:37:15.219131 15552] Config: (default) reshare = false
+[2023-07-30T16:37:15.219131 15552] Config: (default) run_second_cpp = true
+[2023-07-30T16:37:15.219131 15552] Config: (default) secondary_storage = 
+[2023-07-30T16:37:15.219131 15552] Config: (environment) sloppiness = include_file_mtime, include_file_ctime
+[2023-07-30T16:37:15.219131 15552] Config: (default) stats = true
+[2023-07-30T16:37:15.219131 15552] Config: (default) stats_log = 
+[2023-07-30T16:37:15.219131 15552] Config: (default) temporary_dir = C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/tmp
+[2023-07-30T16:37:15.219131 15552] Config: (default) umask = 
+[2023-07-30T16:37:15.219131 15552] Command line: C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\downloads\ccache\v4.6\ccache.exe C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\downloads\gcc\x86\11.3.0-14.0.3-10.0.0-msvcrt-r3\mingw32\bin\gcc.exe -o static_src\CompiledFunctionType.o -c -std=c11 -fvisibility=hidden -fwrapv -pipe -fpartial-inlining -ftrack-macro-expansion=0 -Wno-deprecated-declarations -fno-var-tracking -Wno-misleading-indentation -fcompare-debug-second -O3 -D_WIN32_WINNT=0x0501 -D__NUITKA_NO_ASSERT__ -D_NUITKA_STANDALONE -D_NUITKA_ONEFILE_MODE -D_NUITKA_ONEFILE_TEMP_BOOL -D_NUITKA_CONSTANTS_FROM_RESOURCE -D_NUITKA_FROZEN=155 -D_NUITKA_EXE -ID:\Software\Python311-32\include -I. -ID:\Software\PYTHON~2\Lib\SITE-P~1\nuitka\build\include -ID:\Software\PYTHON~2\Lib\SITE-P~1\nuitka\build\static_src static_src\CompiledFunctionType.c
+[2023-07-30T16:37:15.223134 15552] Hostname: Mi-PC
+[2023-07-30T16:37:15.223134 15552] Working directory: D:/Git/PingOO/tools/ping/dist/udpingoo.build
+[2023-07-30T16:37:15.223134 15552] Compiler type: gcc
+[2023-07-30T16:37:15.224129 15552] Source file: static_src\CompiledFunctionType.c
+[2023-07-30T16:37:15.224129 15552] Object file: static_src\CompiledFunctionType.o
+[2023-07-30T16:37:15.224129 15552] Trying direct lookup
+[2023-07-30T16:37:15.224129 15552] Retrieved da2571141g20egodgdps981vttd63gl8i from primary storage (C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/d/a/2571141g20egodgdps981vttd63gl8iM)
+[2023-07-30T16:37:15.224129 15552] Looking for result key in C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/d/a/2571141g20egodgdps981vttd63gl8iM
+[2023-07-30T16:37:15.283699 15552] Got result key from manifest
+[2023-07-30T16:37:15.283699 15552] Retrieved cb70j381o6s8j929q0m9183mrav3j6kbk from primary storage (C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/c/b/70j381o6s8j929q0m9183mrav3j6kbkR)
+[2023-07-30T16:37:15.283699 15552] Reading embedded entry #0 .o (891073 bytes)
+[2023-07-30T16:37:15.283699 15552] Writing to static_src\CompiledFunctionType.o
+[2023-07-30T16:37:15.285698 15552] Succeeded getting cached result
+[2023-07-30T16:37:15.285698 15552] Result: direct_cache_hit
+[2023-07-30T16:37:15.285698 15552] Result: primary_storage_hit
+[2023-07-30T16:37:15.285698 15552] Acquired lock C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/c/0/stats.lock
+[2023-07-30T16:37:15.286698 15552] Releasing lock C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/c/0/stats.lock
+[2023-07-30T16:37:15.747769 40396] Got result key from preprocessor
+[2023-07-30T16:37:15.747769 40396] No e92ena82prmclllc44eajbeenfuru9kak in primary storage
+[2023-07-30T16:37:15.747769 40396] Running real compiler
+[2023-07-30T16:37:17.977206 40396] Using default compression level 1
+[2023-07-30T16:37:17.977206 40396] Storing embedded entry #0 .o (71631 bytes) from module.__main__.o
+[2023-07-30T16:37:17.978204 40396] Stored e92ena82prmclllc44eajbeenfuru9kak in primary storage (C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/e/9/2ena82prmclllc44eajbeenfuru9kakR)
+[2023-07-30T16:37:17.979218 40396] Adding result key to C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/a/e/f0nr1bu0klr4pmjoe4nmptecrfag9t4M
+[2023-07-30T16:37:17.992223 40396] Using default compression level 1
+[2023-07-30T16:37:17.993222 40396] Stored aef0nr1bu0klr4pmjoe4nmptecrfag9t4 in primary storage (C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/a/e/f0nr1bu0klr4pmjoe4nmptecrfag9t4M)
+[2023-07-30T16:37:17.994222 40396] Result: cache_miss
+[2023-07-30T16:37:17.994222 40396] Result: direct_cache_miss
+[2023-07-30T16:37:17.994222 40396] Result: preprocessed_cache_miss
+[2023-07-30T16:37:17.994222 40396] Result: primary_storage_miss
+[2023-07-30T16:37:17.994222 40396] Acquired lock C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/a/stats.lock
+[2023-07-30T16:37:17.994222 40396] Releasing lock C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/a/stats.lock
+[2023-07-30T16:37:17.994222 40396] Acquired lock C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/e/stats.lock
+[2023-07-30T16:37:17.995730 40396] Releasing lock C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/e/stats.lock
+[2023-07-30T16:37:17.996742 40396] Unlink C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/tmp/tmp.stderr.E1okpe
+[2023-07-30T16:37:17.996742 40396] Unlink C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/tmp/tmp.stdout.8DdWLc
+[2023-07-30T16:37:17.996742 40396] Unlink C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/tmp/tmp.cpp_stderr.bIB8Ty
+[2023-07-30T16:37:17.996742 40396] Unlink C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/tmp/tmp.cpp_stdout.gTOJK8.i
+[2023-07-30T16:37:17.997739 40396] Unlink C:\Users\wocao\AppData\Local\Nuitka\Nuitka\Cache\ccache/tmp/tmp.cpp_stdout.gTOJK8
