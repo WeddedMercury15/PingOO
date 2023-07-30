@@ -49,6 +49,18 @@ class SpeedTestCard(QFrame):
                 border-radius: 10px;
                 padding: 10px;
             }
+
+            QPushButton {
+                border: none; /* 移除按钮的边框 */
+                background-color: #007BFF;
+                color: white;
+                padding: 8px 16px;
+                border-radius: 5px;
+            }
+
+            QPushButton:hover {
+                background-color: #0056b3; /* 鼠标悬停时按钮的背景色 */
+            }
             """
         )
 
