@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QLabel, QPushButton, QWidget, QScrollArea, QFrame, QHBoxLayout
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QLabel, QPushButton, QWidget, QScrollArea, QFrame
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QFont
 
@@ -8,7 +8,7 @@ class SpeedTestThread(QThread):
 
     def run(self):
         try:
-            # Simulate speed test process
+            # 模拟测速过程
             import time
             time.sleep(3)
             result = "测试结果：100 Mbps"
@@ -39,15 +39,9 @@ class SpeedTestCard(QFrame):
         vbox.addWidget(self.result_label)
         vbox.addWidget(self.start_button)
 
-        self.extra_button = QPushButton("额外功能", self)
-        self.extra_button.setFont(font)
-        hbox = QHBoxLayout()
-        hbox.addWidget(self.extra_button)
-        vbox.addLayout(hbox)
-
         self.setLayout(vbox)
 
-        # Set frame style with custom CSS
+        # 设置卡片样式
         self.setStyleSheet(
             """
             QFrame {
