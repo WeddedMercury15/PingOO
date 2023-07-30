@@ -127,12 +127,12 @@ def main():
 
     parser.add_argument("domain", help="要 TCPing 的目标主机名。")
     parser.add_argument("port", type=int, help="目标主机的端口号。")
-    parser.add_argument("-n", dest="request_nums", metavar="count", type=int, default=4, help="计划发送的请求数 (默认: 4)。")
+    parser.add_argument("-n", dest="request_nums", metavar="count", type=int, default=4, help="要发送的回显请求数。")
     parser.add_argument("-d", dest="dns_server", metavar="DNS_server", default=None, help="自定义 DNS 服务器地址。")
-    parser.add_argument("-w", dest="timeout", metavar="timeout", type=int, default=1000, help="每次请求的超时时间(毫秒) (默认: 1000)。")
-    parser.add_argument("-4", dest="force_ipv4", action="store_true", help="强制使用 IPv4 进行查询。")
-    parser.add_argument("-6", dest="force_ipv6", action="store_true", help="强制使用 IPv6 进行查询。")
-    parser.add_argument("-t", dest="continuous_ping", action="store_true", help="无限执行TCPing直到手动Ctrl+C终止。")
+    parser.add_argument("-w", dest="timeout", metavar="timeout", type=int, default=1000, help="等待每次回复的超时时间(毫秒)。")
+    parser.add_argument("-4", dest="force_ipv4", action="store_true", help="强制使用 IPv4。")
+    parser.add_argument("-6", dest="force_ipv6", action="store_true", help="强制使用 IPv6。")
+    parser.add_argument("-t", dest="continuous_ping", action="store_true", help="Ping 指定的主机，直到停止。\n若要查看统计信息并继续操作，请键入 Ctrl+Break； \n若要停止，请键入 Ctrl+C。")
 
     args = parser.parse_args()
 
