@@ -28,10 +28,47 @@ class SpeedTestCard(ttk.Frame):
         self.lbl_ping = tk.Label(self, text="Ping：0 ms", font=("Arial", 12))
         self.lbl_ping.pack(pady=5)
 
-    def update_results(self, download_speed, upload_speed, ping):
-        self.lbl_download.config(text=f"下载速度：{download_speed:.2f} Mbps")
-        self.lbl_upload.config(text=f"上传速度：{upload_speed:.2f} Mbps")
-        self.lbl_ping.config(text=f"Ping：{ping:.2f} ms")
+        if self.title == "测速选项":
+            self.create_speed_options()
+        elif self.title == "网络连接状态":
+            self.create_network_status()
+
+    def create_speed_options(self):
+        self.speed_test_interval = 10
+
+        self.lbl_interval = tk.Label(self, text="测速间隔（秒）：", font=("Arial", 12))
+        self.lbl_interval.pack(pady=5)
+
+        self.scale_interval = tk.Scale(self, from_=1, to=60, orient=tk.HORIZONTAL, length=200)
+        self.scale_interval.set(self.speed_test_interval)
+        self.scale_interval.pack(pady=5)
+
+        self.btn_apply = tk.Button(self, text="应用设置", font=("Arial", 12), command=self.apply_settings)
+        self.btn_apply.pack(pady=5)
+
+    def apply_settings(self):
+        self.speed_test_interval = self.scale_interval.get()
+        messagebox.showinfo("设置", f"测速间隔设置为：{self.speed_test_interval} 秒")
+
+    def create_network_status(self):
+        self.lbl_status = tk.Label(self, text="网络连接状态：未知", font=("Arial", 12))
+        self.lbl_status.pack(pady=5)
+        self.update_network_status()
+
+    def update_network_status(self):
+        if platform.system() == "Windows":
+            ping_cmd = ["ping", "8.8.8.8", "-n", "1"]
+        else:
+            ping_cmd = ["ping", "8.8.8.8", "-c", "1"]
+
+        try:
+            subprocess.check_output(ping_cmd, text=True, stderr=subprocess.STDOUT)
+            status = "已连接"
+        except subprocess.CalledProcessError:
+            status = "未连接"
+
+        self.lbl_status.config(text=f"网络连接状态：{status}")
+        self.after(5000, self.update_network_status)
 
 class SpeedTestApp(tk.Tk):
     def __init__(self):
@@ -46,6 +83,8 @@ class SpeedTestApp(tk.Tk):
         self.paned_window.pack(fill=tk.BOTH, expand=True)
 
         self.cards = []
+        self.cards.append(SpeedTestCard(self.paned_window, "测速选项"))
+        self.cards.append(SpeedTestCard(self.paned_window, "网络连接状态"))
         for i in range(3):
             title = f"卡片 {i+1}"
             card = SpeedTestCard(self.paned_window, title)
@@ -68,8 +107,14 @@ class SpeedTestApp(tk.Tk):
         self.is_speed_test_running = False
         self.speed_test_interval = 10
         self.speed_test_timer = None
+        self.speed_test_thread = None
 
         self.update_speed_test_results()
+
+        self.paned_window.bind("<ButtonRelease-1>", self.on_paned_release)
+
+    def on_paned_release(self, event):
+        self.paned_window.update()
 
     def perform_speed_test(self):
         try:
@@ -90,7 +135,7 @@ class SpeedTestApp(tk.Tk):
                 elif "Ping:" in line:
                     ping = float(line.split()[1])
 
-            for card in self.cards:
+            for card in self.cards[3:]:
                 card.update_results(download_speed, upload_speed, ping)
 
             self.save_results_to_file(download_speed, upload_speed, ping)
@@ -102,7 +147,9 @@ class SpeedTestApp(tk.Tk):
             self.is_speed_test_running = True
             self.btn_start.config(state=tk.DISABLED)
             self.btn_stop.config(state=tk.NORMAL)
-            threading.Thread(target=self.run_speed_test, daemon=True).start()
+            self.speed_test_thread = threading.Thread(target=self.run_speed_test)
+            self.speed_test_thread.daemon = True
+            self.speed_test_thread.start()
 
     def run_speed_test(self):
         while self.is_speed_test_running:
@@ -111,6 +158,8 @@ class SpeedTestApp(tk.Tk):
 
     def stop_speed_test(self):
         self.is_speed_test_running = False
+        if self.speed_test_thread and self.speed_test_thread.is_alive():
+            self.speed_test_thread.join()
         self.btn_start.config(state=tk.NORMAL)
         self.btn_stop.config(state=tk.DISABLED)
 
