@@ -5,7 +5,7 @@ import argparse
 import signal
 import os
 
-# Add this global flag variable to track whether Ctrl+C was used or not
+# 添加此全局标志变量以跟踪是否使用了 Ctrl+C
 ctrl_c_used = False
 
 def custom_gaierror(msg):
@@ -60,17 +60,17 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, timeout=1000, con
 
         try:
             while continuous_ping or request_num <= request_nums:
-                if ctrl_c_used:  # Check if Ctrl+C was used
+                if ctrl_c_used:  # 检查是否使用了 Ctrl+C
                     break
 
                 start_time = time.time()
                 try:
                     with socket.create_connection((ip, port), timeout=timeout / 1000) as conn:
-                        # Set the TTL value before sending the ping request
+                        # 在发送 ping 请求之前设置 TTL 值
                         conn.setsockopt(socket.IPPROTO_IP, socket.IP_TTL, ttl)
                         
                         end_time = time.time()
-                        response_time = (end_time - start_time) * 1000  # Convert to milliseconds
+                        response_time = (end_time - start_time) * 1000  # 转换为毫秒
                         response_times.append(response_time)
                         print(f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL={ttl}")
                         received_count += 1
@@ -110,7 +110,7 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, timeout=1000, con
         else:
             print("请求全部超时，无法计算往返行程时间.")
 
-        if ctrl_c_used:  # Only print "Control-C" if Ctrl+C was used
+        if ctrl_c_used:  # 如果使用 Ctrl+C，则仅打印“Control-C”
             print("Control-C")
 
     except ValueError as e:
