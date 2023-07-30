@@ -33,7 +33,7 @@ def resolve_ip(hostname, force_ipv4=False):
     except socket.gaierror:
         raise ValueError(f"TCPing 请求找不到主机 {hostname}。请检查该名称，然后重试.")
 
-def tcping(domain, port, request_nums, force_ipv4, force_ipv6, timeout=1000, continuous_ping=False):
+def tcping(domain, port, request_nums, force_ipv4, force_ipv6, timeout=1000, continuous_ping=False, ttl=64):
     try:
         ip = None
 
@@ -66,10 +66,13 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, timeout=1000, con
                 start_time = time.time()
                 try:
                     with socket.create_connection((ip, port), timeout=timeout / 1000) as conn:
+                        # Set the TTL value before sending the ping request
+                        conn.setsockopt(socket.IPPROTO_IP, socket.IP_TTL, ttl)
+                        
                         end_time = time.time()
                         response_time = (end_time - start_time) * 1000  # Convert to milliseconds
                         response_times.append(response_time)
-                        print(f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL=64")
+                        print(f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL={ttl}")
                         received_count += 1
                         request_num += 1
                         time.sleep(1)
@@ -133,6 +136,7 @@ def main():
     parser.add_argument("-4", dest="force_ipv4", action="store_true", help="强制使用 IPv4。")
     parser.add_argument("-6", dest="force_ipv6", action="store_true", help="强制使用 IPv6。")
     parser.add_argument("-t", dest="continuous_ping", action="store_true", help="Ping 指定的主机，直到停止。\n若要查看统计信息并继续操作，请键入 Ctrl+Break； \n若要停止，请键入 Ctrl+C。")
+    parser.add_argument("-i", dest="ttl", metavar="TTL", type=int, default=64, help="指定发送的TCP包的生存时间（TTL）值。")
 
     args = parser.parse_args()
 
@@ -140,7 +144,7 @@ def main():
         if args.request_nums < 1:
             args.request_nums = 4
 
-        tcping(args.domain, args.port, args.request_nums, args.force_ipv4, args.force_ipv6, args.timeout, args.continuous_ping)
+        tcping(args.domain, args.port, args.request_nums, args.force_ipv4, args.force_ipv6, args.timeout, args.continuous_ping, args.ttl)
 
     except ValueError as e:
         print(e)
