@@ -19,65 +19,18 @@ class SpeedTestCard(ttk.Frame):
         self.lbl_title = tk.Label(self, text=self.title, font=("Arial", 14, "bold"))
         self.lbl_title.pack(pady=5)
 
-        self.lbl_download = tk.Label(self, text="下载速度：0 Mbps", font=("Arial", 12))
-        self.lbl_download.pack(pady=5)
+        self.lbl_result = tk.Label(self, text="", font=("Arial", 12))
+        self.lbl_result.pack(pady=5)
 
-        self.lbl_upload = tk.Label(self, text="上传速度：0 Mbps", font=("Arial", 12))
-        self.lbl_upload.pack(pady=5)
-
-        self.lbl_ping = tk.Label(self, text="Ping：0 ms", font=("Arial", 12))
-        self.lbl_ping.pack(pady=5)
-
-        if self.title == "测速选项":
-            self.create_speed_options()
-        elif self.title == "网络连接状态":
-            self.create_network_status()
-
-    def create_speed_options(self):
-        self.speed_test_interval = 10
-
-        self.lbl_interval = tk.Label(self, text="测速间隔（秒）：", font=("Arial", 12))
-        self.lbl_interval.pack(pady=5)
-
-        self.scale_interval = tk.Scale(self, from_=1, to=60, orient=tk.HORIZONTAL, length=200)
-        self.scale_interval.set(self.speed_test_interval)
-        self.scale_interval.pack(pady=5)
-
-        self.btn_apply = tk.Button(self, text="应用设置", font=("Arial", 12), command=self.apply_settings)
-        self.btn_apply.pack(pady=5)
-
-    def apply_settings(self):
-        self.speed_test_interval = self.scale_interval.get()
-        messagebox.showinfo("设置", f"测速间隔设置为：{self.speed_test_interval} 秒")
-
-    def create_network_status(self):
-        self.lbl_status = tk.Label(self, text="网络连接状态：未知", font=("Arial", 12))
-        self.lbl_status.pack(pady=5)
-        self.update_network_status()
-
-    def update_network_status(self):
-        if platform.system() == "Windows":
-            ping_cmd = ["ping", "8.8.8.8", "-n", "1"]
-        else:
-            ping_cmd = ["ping", "8.8.8.8", "-c", "1"]
-
-        try:
-            subprocess.check_output(ping_cmd, text=True, stderr=subprocess.STDOUT)
-            status = "已连接"
-        except subprocess.CalledProcessError:
-            status = "未连接"
-
-        self.lbl_status.config(text=f"网络连接状态：{status}")
-        self.after(5000, self.update_network_status)
+    def update_results(self, result):
+        self.lbl_result.config(text=result)
 
 class SpeedTestApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("SpeedTest in Python - 简体中文版")
-        self.geometry("400x400")
+        self.geometry("400x600")
         self.minsize(400, 400)  # 设置窗口最小尺寸
-        self.maxsize(800, 800)  # 设置窗口最大尺寸
-        self.overrideredirect(True)  # 移除边框和标题栏，取消最大化和最小化按钮
 
         self.create_widgets()
 
@@ -85,14 +38,14 @@ class SpeedTestApp(tk.Tk):
         self.paned_window = ttk.PanedWindow(self, orient=tk.VERTICAL)
         self.paned_window.pack(fill=tk.BOTH, expand=True)
 
-        self.cards = []
-        self.cards.append(SpeedTestCard(self.paned_window, "测速选项"))
-        self.cards.append(SpeedTestCard(self.paned_window, "网络连接状态"))
-        for i in range(3):
-            title = f"卡片 {i+1}"
-            card = SpeedTestCard(self.paned_window, title)
-            self.paned_window.add(card)
-            self.cards.append(card)
+        self.speed_test_card = SpeedTestCard(self.paned_window, "测速结果")
+        self.paned_window.add(self.speed_test_card)
+
+        self.options_card = SpeedTestCard(self.paned_window, "测速选项")
+        self.paned_window.add(self.options_card)
+
+        self.network_card = SpeedTestCard(self.paned_window, "网络连接状态")
+        self.paned_window.add(self.network_card)
 
         self.frame_bottom = tk.Frame(self)
         self.frame_bottom.pack(pady=10)
@@ -112,12 +65,7 @@ class SpeedTestApp(tk.Tk):
         self.speed_test_timer = None
         self.speed_test_thread = None
 
-        self.update_speed_test_results()
-
-        self.paned_window.bind("<ButtonRelease-1>", self.on_paned_release)
-
-    def on_paned_release(self, event):
-        self.paned_window.update()
+        self.update_network_status()
 
     def perform_speed_test(self):
         try:
@@ -138,15 +86,10 @@ class SpeedTestApp(tk.Tk):
                 elif "Ping:" in line:
                     ping = float(line.split()[1])
 
-            for card in self.cards[3:]:
-                card.update_results(download_speed, upload_speed, ping)
-
+            result_text = f"下载速度：{download_speed:.2f} Mbps\n上传速度：{upload_speed:.2f} Mbps\nPing：{ping:.2f} ms"
+            self.speed_test_card.update_results(result_text)
             self.save_results_to_file(download_speed, upload_speed, ping)
-
-            # 输出信息到控制台
-            print(f"下载速度：{download_speed:.2f} Mbps")
-            print(f"上传速度：{upload_speed:.2f} Mbps")
-            print(f"Ping：{ping:.2f} ms")
+            print(result_text)  # 输出信息到控制台
         except Exception as e:
             messagebox.showerror("Error", f"测速出错：{e}")
             print("测速出错:", e)
@@ -172,9 +115,20 @@ class SpeedTestApp(tk.Tk):
         self.btn_start.config(state=tk.NORMAL)
         self.btn_stop.config(state=tk.DISABLED)
 
-    def update_speed_test_results(self):
-        self.perform_speed_test()
-        self.speed_test_timer = self.after(self.speed_test_interval * 1000, self.update_speed_test_results)
+    def update_network_status(self):
+        if platform.system() == "Windows":
+            ping_cmd = ["ping", "8.8.8.8", "-n", "1"]
+        else:
+            ping_cmd = ["ping", "8.8.8.8", "-c", "1"]
+
+        try:
+            subprocess.check_output(ping_cmd, text=True, stderr=subprocess.STDOUT)
+            status = "已连接"
+        except subprocess.CalledProcessError:
+            status = "未连接"
+
+        self.network_card.update_results(f"网络连接状态：{status}")
+        self.after(5000, self.update_network_status)
 
     def view_history(self):
         if os.path.isfile("speedtest_results.txt"):
