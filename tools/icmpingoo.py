@@ -4,45 +4,58 @@ import time
 import argparse
 import signal
 import os
+from ping3 import ping
 
 # 添加此全局标志变量以跟踪是否使用了 Ctrl+C
 ctrl_c_used = False
 
-
 # 自定义DNS解析异常类，用于抛出更具体的错误信息
 def custom_gaierror(msg):
-    class CustomGaiError(socket.gaierror):
+    class CustomGaiError(Exception):
         def __init__(self, message):
-            super().__init__(-1, message)
+            super().__init__(message)
 
     raise CustomGaiError(msg)
-
 
 # SIGINT信号处理程序 (Ctrl+C)
 def signal_handler(sig, frame):
     global ctrl_c_used
     ctrl_c_used = True
 
-
-# 解析目标主机的IP地址，支持IPv4和IPv6
-def resolve_ip(hostname, force_ipv4=False):
+# 解析目标主机的IP地址
+def resolve_ip(host, force_ipv4=False):
     try:
         # 默认使用IPv4进行DNS查询
         family = socket.AF_INET if force_ipv4 else socket.AF_INET6
 
         # 使用系统默认的DNS服务器进行查询
-        addr_info = socket.getaddrinfo(hostname, None, family)
+        addr_info = socket.getaddrinfo(host, None, family)
         ip = addr_info[0][4][0]  # 获取IP地址
 
         return ip
 
     except socket.gaierror:
-        raise ValueError(f"ICMPing 请求找不到主机 {hostname}。请检查该名称，然后重试.")
+        raise ValueError(f"ICMPing 请求找不到主机 {host}。请检查该名称，然后重试.")
 
+# 检查主机名是否为IP地址
+def is_valid_ip(host):
+    try:
+        socket.inet_pton(socket.AF_INET, host)
+        return True
+    except (socket.error, ValueError):
+        pass
+
+    try:
+        socket.inet_pton(socket.AF_INET6, host)
+        return True
+    except (socket.error, ValueError):
+        pass
+
+    return False
 
 # 执行ICMP Ping操作，测量响应时间和丢包率
 def icmping(
-    domain,
+    hostname,
     request_nums,
     force_ipv4,
     force_ipv6,
@@ -56,20 +69,24 @@ def icmping(
         # 根据参数设置DNS解析方式
         if force_ipv4:
             # 如果使用 -4 参数，只使用IPv4进行DNS查询
-            ip = resolve_ip(domain, force_ipv4=True)
+            ip = resolve_ip(hostname, force_ipv4=True)
         elif force_ipv6:
             # 如果使用 -6 参数，只使用IPv6进行DNS查询
-            ip = resolve_ip(domain, force_ipv4=False)
+            ip = resolve_ip(hostname, force_ipv4=False)
         else:
             # 否则，根据系统的网络配置来选择DNS查询方式
             try:
                 # 尝试使用IPv4进行DNS查询
-                ip = resolve_ip(domain, force_ipv4=True)
+                ip = resolve_ip(hostname, force_ipv4=True)
             except ValueError:
                 # 如果IPv4查询失败，则使用IPv6进行DNS查询
-                ip = resolve_ip(domain, force_ipv4=False)
+                ip = resolve_ip(hostname, force_ipv4=False)
 
-        print(f"\n正在 ICMPing {domain} [{ip}]:")
+        if not is_valid_ip(hostname):
+            print(f"\n正在 ICMPing {hostname} [{ip}] 具有 32 字节的数据:")  # 修改输出行
+        else:
+            print(f"\n正在 ICMPing {hostname} 具有 32 字节的数据:")
+
         request_num = 1
         response_times = []
         received_count = 0
@@ -80,53 +97,22 @@ def icmping(
                 if ctrl_c_used:  # 检查是否使用了 Ctrl+C
                     break
 
+                # 使用 ping3 库发送 ICMP Echo 请求
                 start_time = time.time()
-                try:
-                    with socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP) as sock:
-                        # 在发送 ICMP Echo Request 之前设置 TTL 值
-                        sock.setsockopt(socket.IPPROTO_IP, socket.IP_TTL, ttl)
+                response_time = ping(hostname, timeout=timeout / 1000, unit="ms", ttl=ttl)
 
-                        # 构建 ICMP Echo Request 报文
-                        icmp_type = 8  # ICMP Echo Request Type
-                        icmp_code = 0  # ICMP Echo Request Code
-                        checksum = 0   # Placeholder for checksum
-                        identifier = os.getpid() & 0xFFFF
-                        sequence_number = request_num & 0xFFFF
-                        data = b'PingData'  # Placeholder for data
-
-                        # Calculate the ICMP checksum
-                        icmp_header = struct.pack('!BBHHH', icmp_type, icmp_code, checksum, identifier, sequence_number)
-                        checksum = calculate_checksum(icmp_header + data)
-                        icmp_header = struct.pack('!BBHHH', icmp_type, icmp_code, checksum, identifier, sequence_number)
-
-                        # Send the ICMP Echo Request
-                        sock.sendto(icmp_header + data, (ip, 0))
-
-                        # Set a receive timeout
-                        sock.settimeout(timeout / 1000)
-
-                        # Receive the response
-                        response = sock.recv(1024)
-
-                        end_time = time.time()
-                        response_time = (end_time - start_time) * 1000  # 转换为毫秒
-                        response_times.append(response_time)
-                        print(
-                            f"来自 {ip}: 回复: 字节=32 时间={response_time:.0f}ms TTL={ttl}"
-                        )
-                        received_count += 1
-                        request_num += 1
-                        time.sleep(1)
-                except socket.timeout:
+                if response_time is not None:
+                    response_times.append(response_time)  # 毫秒为单位
+                    print(
+                        f"来自 {hostname} 的回复: 字节=32 时间={response_time:.0f}ms TTL={ttl}"
+                    )
+                    received_count += 1
+                else:
                     print("请求超时。")
                     lost_count += 1
-                    request_num += 1
-                    time.sleep(1)
-                except (OSError, ConnectionRefusedError) as e:
-                    print(f"无法连接到 {ip}.")
-                    lost_count += 1
-                    request_num += 1
-                    time.sleep(1)
+
+                request_num += 1
+                time.sleep(1)
 
         except KeyboardInterrupt:
             pass
@@ -163,7 +149,6 @@ def icmping(
     except ValueError as e:
         print(e)
 
-
 # 主函数
 def main():
     script_name = os.path.basename(sys.argv[0])  # 获取脚本或可执行文件名称
@@ -175,29 +160,21 @@ def main():
         f"{script_name} example.com\n"
         f"{script_name} example.com -4\n"
         f"{script_name} example.com -6\n"
-        f"{script_name} example.com -d 1.1.1.1\n"
         f"{script_name} example.com -h\n"
         f"{script_name} example.com -i 128\n"
         f"{script_name} example.com -n 4\n"
         f"{script_name} example.com -t\n"
         f"{script_name} example.com -w 1000",
-        usage="%(prog)s domain [-4] [-6] [-d DNS_server] [-h] [-i TTL] [-n count] [-t] [-w timeout]",
+        usage="%(prog)s hostname [-4] [-6] [-h] [-i TTL] [-n count] [-t] [-w timeout]",
         add_help=False,
     )
 
-    parser.add_argument("domain", help="要 ICMPing 的目标主机名。")
+    parser.add_argument("hostname", help="要 ICMPing 的目标主机名或IP地址。")
     parser.add_argument("-4", dest="force_ipv4", action="store_true", help="强制使用 IPv4。")
     parser.add_argument("-6", dest="force_ipv6", action="store_true", help="强制使用 IPv6。")
-    parser.add_argument(
-        "-d",
-        dest="dns_server",
-        metavar="DNS_server",
-        default=None,
-        help="自定义 DNS 服务器地址。",
-    )
     parser.add_argument("-h", action="help", help="显示帮助信息并退出。")
     parser.add_argument(
-        "-i", dest="ttl", metavar="TTL", type=int, default=128, help="生存时间。"
+        "-i", dest="ttl", metavar="TTL", type=int, default=64, help="生存时间。"
     )
     parser.add_argument(
         "-n",
@@ -229,7 +206,7 @@ def main():
             args.request_nums = 4
 
         icmping(
-            args.domain,
+            args.hostname,
             args.request_nums,
             args.force_ipv4,
             args.force_ipv6,
@@ -240,7 +217,6 @@ def main():
 
     except ValueError as e:
         print(e)
-
 
 if __name__ == '__main__':
     # 设置 SIGINT 的信号处理程序 (Ctrl+C)
