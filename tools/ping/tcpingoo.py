@@ -216,7 +216,7 @@ def main():
             args.request_nums = 4
 
         if args.continuous_ping and args.request_nums > 0:
-            print("[警告]：同时使用 -t 和 -n 参数时，-t 参数将被忽略，仅执行指定次数的 TCP Ping 操作。")
+            print("[警告] 同时使用 -t 和 -n 参数时，-t 参数将被忽略，仅执行指定次数的 TCP Ping 操作。")
 
         tcping(
             args.domain,
