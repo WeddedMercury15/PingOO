@@ -122,11 +122,11 @@ def main():
     parser = argparse.ArgumentParser(description=f"{script_name} - 使用 TCP 协议检查目标主机端口的可达性。",
                                     formatter_class=argparse.RawDescriptionHelpFormatter,
                                     epilog="示例:\n"
-                                            f"{script_name} yohoky.com 80\n"
-                                            f"{script_name} yohoky.com 80 -d 1.1.1.1\n"
-                                            f"{script_name} yohoky.com 80 -n 10 -w 500\n"
-                                            f"{script_name} yohoky.com 80 -4\n"
-                                            f"{script_name} yohoky.com 80 -6")
+                                            f"{script_name} example.com 80\n"
+                                            f"{script_name} example.com 80 -d 1.1.1.1\n"
+                                            f"{script_name} example.com 80 -n 10 -w 500\n"
+                                            f"{script_name} example.com 80 -4\n"
+                                            f"{script_name} example.com 80 -6")
 
     parser.add_argument("domain", help="要 TCPing 的目标主机名。")
     parser.add_argument("port", type=int, help="目标主机的端口号。")
