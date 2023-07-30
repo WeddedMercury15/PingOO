@@ -136,7 +136,7 @@ def main():
     parser.add_argument("-4", dest="force_ipv4", action="store_true", help="强制使用 IPv4。")
     parser.add_argument("-6", dest="force_ipv6", action="store_true", help="强制使用 IPv6。")
     parser.add_argument("-t", dest="continuous_ping", action="store_true", help="Ping 指定的主机，直到停止。\n若要查看统计信息并继续操作，请键入 Ctrl+Break； \n若要停止，请键入 Ctrl+C。")
-    parser.add_argument("-i", dest="ttl", metavar="TTL", type=int, default=64, help="指定发送的TCP包的生存时间（TTL）值。")
+    parser.add_argument("-i", dest="ttl", metavar="TTL", type=int, default=128, help="生存时间。")
 
     args = parser.parse_args()
 
