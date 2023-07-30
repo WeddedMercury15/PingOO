@@ -75,6 +75,9 @@ class SpeedTestApp(tk.Tk):
         super().__init__()
         self.title("SpeedTest in Python - 简体中文版")
         self.geometry("400x400")
+        self.minsize(400, 400)  # 设置窗口最小尺寸
+        self.maxsize(800, 800)  # 设置窗口最大尺寸
+        self.overrideredirect(True)  # 移除边框和标题栏，取消最大化和最小化按钮
 
         self.create_widgets()
 
@@ -139,8 +142,14 @@ class SpeedTestApp(tk.Tk):
                 card.update_results(download_speed, upload_speed, ping)
 
             self.save_results_to_file(download_speed, upload_speed, ping)
+
+            # 输出信息到控制台
+            print(f"下载速度：{download_speed:.2f} Mbps")
+            print(f"上传速度：{upload_speed:.2f} Mbps")
+            print(f"Ping：{ping:.2f} ms")
         except Exception as e:
             messagebox.showerror("Error", f"测速出错：{e}")
+            print("测速出错:", e)
 
     def start_speed_test(self):
         if not self.is_speed_test_running:
