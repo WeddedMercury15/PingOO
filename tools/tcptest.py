@@ -3,6 +3,7 @@ import socket
 import time
 import argparse
 import signal
+import os
 
 # Add this global flag variable to track whether Ctrl+C was used or not
 ctrl_c_used = False
@@ -113,14 +114,16 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, timeout=1000, con
         print(e)
 
 def main():
-    parser = argparse.ArgumentParser(description="TCPing 工具 - 使用 TCP 协议检查目标主机端口的可达性。",
-                                     formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     epilog="示例:\n"
-                                            "python tcpingoo.b.py yohoky.com 80\n"
-                                            "python tcpingoo.b.py yohoky.com 80 -d 1.1.1.1\n"
-                                            "python tcpingoo.b.py yohoky.com 80 -n 10 -w 500\n"
-                                            "python tcpingoo.b.py yohoky.com 80 -4\n"
-                                            "python tcpingoo.b.py yohoky.com 80 -6")
+    script_name = os.path.basename(sys.argv[0])  # 获取脚本或可执行文件名称
+
+    parser = argparse.ArgumentParser(description=f"{script_name} - 使用 TCP 协议检查目标主机端口的可达性。",
+                                    formatter_class=argparse.RawDescriptionHelpFormatter,
+                                    epilog="示例:\n"
+                                            f"{script_name} yohoky.com 80\n"
+                                            f"{script_name} yohoky.com 80 -d 1.1.1.1\n"
+                                            f"{script_name} yohoky.com 80 -n 10 -w 500\n"
+                                            f"{script_name} yohoky.com 80 -4\n"
+                                            f"{script_name} yohoky.com 80 -6")
 
     parser.add_argument("domain", help="要 TCPing 的目标主机名。")
     parser.add_argument("port", type=int, help="目标主机的端口号。")
@@ -143,6 +146,6 @@ def main():
         print(e)
 
 if __name__ == '__main__':
-    # Set up the signal handler for SIGINT (Ctrl+C)
+    # 设置 SIGINT 的信号处理程序 (Ctrl+C)
     signal.signal(signal.SIGINT, signal_handler)
     main()
