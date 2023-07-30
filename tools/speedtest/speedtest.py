@@ -1,24 +1,20 @@
+from __future__ import absolute_import
 import sys
-import speedtest
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QLabel, QPushButton, QWidget, QGroupBox, QHBoxLayout, QScrollArea
-from PyQt5.QtCore import Qt, QThread, pyqtSignal
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QLabel, QPushButton, QWidget, QScrollArea
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QFont
-
+import subprocess
 
 class SpeedTestThread(QThread):
     speed_test_done = pyqtSignal(str)
 
     def run(self):
-        st = speedtest.Speedtest()
-        st.get_best_server()
-        st.download()
-        st.upload()
-        result = st.results.dict()
-        download_speed = result["download"] / 10**6
-        upload_speed = result["upload"] / 10**6
-        ping = result["ping"]
-        self.speed_test_done.emit(f"下载速度: {download_speed:.2f} Mbps\n上传速度: {upload_speed:.2f} Mbps\nPing值: {ping:.2f} ms")
-
+        try:
+            output = subprocess.check_output(["speedtest-cli"])
+            result = output.decode("utf-8")
+            self.speed_test_done.emit(result)
+        except subprocess.CalledProcessError:
+            self.speed_test_done.emit("测速失败。")
 
 class SpeedTestApp(QMainWindow):
     def __init__(self):
@@ -42,13 +38,15 @@ class SpeedTestApp(QMainWindow):
         content_widget = QWidget()
         scroll_area.setWidget(content_widget)
 
-        card_layout = QHBoxLayout(content_widget)
+        card_layout = QVBoxLayout(content_widget)
         card_layout.setAlignment(Qt.AlignLeft)
 
         font = QFont("Arial", 12)
 
         self.result_label = QLabel("点击 '开始测试' 开始测速", self)
         self.result_label.setFont(font)
+        self.result_label.setAlignment(Qt.AlignCenter)
+        self.result_label.setStyleSheet("QLabel { background-color : white; }")
         card_layout.addWidget(self.result_label)
 
         self.start_button = QPushButton("开始测试", self)
@@ -64,6 +62,9 @@ class SpeedTestApp(QMainWindow):
         self.thread.finished.connect(self.on_speed_test_finished)
         self.thread.start()
 
+        QApplication.processEvents()
+
+    @pyqtSlot(str)
     def on_speed_test_done(self, result):
         self.result_label.setText(result)
 
