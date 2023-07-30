@@ -13,7 +13,13 @@ class SpeedTestCard(ttk.Frame):
         super().__init__(parent, relief="raised", borderwidth=2)
         self.parent = parent
         self.title = title
+        self.mouse_x, self.mouse_y = 0, 0
+        self.bind_events()
         self.create_widgets()
+
+    def bind_events(self):
+        self.bind("<ButtonPress-1>", self.on_mouse_press)
+        self.bind("<B1-Motion>", self.on_mouse_motion)
 
     def create_widgets(self):
         self.lbl_title = tk.Label(self, text=self.title, font=("Arial", 14, "bold"))
@@ -24,6 +30,15 @@ class SpeedTestCard(ttk.Frame):
 
     def update_results(self, result):
         self.lbl_result.config(text=result)
+
+    def on_mouse_press(self, event):
+        self.mouse_x = event.x
+        self.mouse_y = event.y
+
+    def on_mouse_motion(self, event):
+        x = self.winfo_x() + (event.x - self.mouse_x)
+        y = self.winfo_y() + (event.y - self.mouse_y)
+        self.place(x=max(0, x), y=max(0, y))
 
 class SpeedTestApp(tk.Tk):
     def __init__(self):
