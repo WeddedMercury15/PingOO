@@ -1,7 +1,7 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QScrollArea, QFrame
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QFont, QPixmap, QImage, QPainter
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QFrame
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot, QRect, QPoint, QPropertyAnimation, QObject, pyqtProperty, QRectF
+from PyQt5.QtGui import QFont, QPainter, QColor, QPen, QPainterPath, QIcon
 
 class SpeedTestThread(QThread):
     speed_test_done = pyqtSignal(str)
@@ -48,6 +48,7 @@ class SpeedTestCard(QFrame):
                 border: 2px solid #007BFF;
                 border-radius: 10px;
                 padding: 10px;
+                background-color: rgba(255, 255, 255, 200);
             }
 
             QPushButton {
@@ -76,6 +77,66 @@ class SpeedTestCard(QFrame):
         self.result_label.setText(result)
         self.start_button.setEnabled(True)
 
+class CloseButton(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._angle = 0
+        self.animation = QPropertyAnimation(self, b"_angle")
+        self.animation.setDuration(1000)
+        self.animation.setLoopCount(-1)
+        self.animation.setStartValue(0)
+        self.animation.setEndValue(360)
+        self.animation.start()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+
+        # Draw the blue rounded rectangle background
+        radius = 50
+        rect = QRectF(0.0, 0.0, 35.0, 35.0)
+        painter_path = QPainterPath()
+        painter_path.addRoundedRect(rect, radius, radius)
+
+        color = QColor("#007BFF")  # Blue color for the rounded rectangle background
+        painter.setPen(QPen(color, 2))
+        painter.setBrush(color)
+        painter.drawPath(painter_path)
+
+        # Draw the red cross (X)
+        size = 10
+        pen = QPen(Qt.red, 2)
+        painter.setPen(pen)
+
+        center_x = int(rect.width() / 2)
+        center_y = int(rect.height() / 2)
+
+        painter.drawLine(center_x - size, center_y - size, center_x + size, center_y + size)
+        painter.drawLine(center_x - size, center_y + size, center_x + size, center_y - size)
+
+    def sizeHint(self):
+        return self.size()
+
+    @pyqtProperty(int)
+    def _angle(self):
+        return self.__angle
+
+    @_angle.setter
+    def _angle(self, value):
+        self.__angle = value
+        self.update()
+
+    def enterEvent(self, event):
+        self.animation.start()
+
+    def leaveEvent(self, event):
+        self.animation.stop()
+
+    close_clicked = pyqtSignal()  # 自定义信号 close_clicked
+
+    def mousePressEvent(self, event):
+        self.close_clicked.emit()  # 触发 close_clicked 信号
+
 class SpeedTestApp(QWidget):
     def __init__(self):
         super().__init__()
@@ -86,41 +147,20 @@ class SpeedTestApp(QWidget):
         self.setWindowTitle("SpeedTest GUI")
         self.setGeometry(100, 100, 400, 200)
 
+        self.setWindowFlags(Qt.FramelessWindowHint)  # 去掉窗口边框
+        self.setAttribute(Qt.WA_TranslucentBackground)  # 开启窗口透明效果
+
         main_layout = QVBoxLayout()
+
+        # 添加右上角的小红叉
+        close_button = CloseButton(self)
+        close_button.close_clicked.connect(self.close)  # 关联 close_clicked 信号到关闭窗口槽函数
+        main_layout.addWidget(close_button, alignment=Qt.AlignTop | Qt.AlignRight)
 
         self.card = SpeedTestCard()
         main_layout.addWidget(self.card)
 
-        main_widget = QWidget()
-        main_widget.setLayout(main_layout)
-
-        scroll_area = QScrollArea(self)
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setWidget(main_widget)
-
-        self.setCentralWidget(scroll_area)
-
-        self.create_blur_effect()
-
-    def create_blur_effect(self):
-        # 获取窗口截图
-        screen = QApplication.primaryScreen()
-        if screen is not None:
-            screenshot = screen.grabWindow(self.winId())
-            screenshot = screenshot.scaled(self.width(), self.height(), Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
-
-            # 创建模糊效果
-            blurred = screenshot.copy()
-            painter = QPainter(blurred)
-            painter.setCompositionMode(QPainter.CompositionMode_DestinationIn)
-            painter.fillRect(blurred.rect(), QColor(0, 0, 0, 150))
-            painter.end()
-
-            self.setMask(blurred.mask())
-            self.setAutoFillBackground(True)
-            palette = self.palette()
-            palette.setBrush(self.backgroundRole(), blurred)
-            self.setPalette(palette)
+        self.setLayout(main_layout)
 
     def mousePressEvent(self, event):
         self.offset = event.pos()
