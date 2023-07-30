@@ -3,6 +3,7 @@ import socket
 import time
 import argparse
 import signal
+import os
 
 # Add this global flag variable to track whether Ctrl+C was used or not
 ctrl_c_used = False
@@ -32,7 +33,7 @@ def resolve_ip(hostname, force_ipv4=False):
     except socket.gaierror:
         raise ValueError(f"TCPing 请求找不到主机 {hostname}。请检查该名称，然后重试.")
 
-def tcping(domain, port, request_nums, force_ipv4, force_ipv6, timeout=1000):
+def tcping(domain, port, request_nums, force_ipv4, force_ipv6, timeout=1000, continuous_ping=False, ttl=64):
     try:
         ip = None
 
@@ -52,94 +53,26 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, timeout=1000):
                 ip = resolve_ip(domain, force_ipv4=False)
 
         print(f"\n正在 TCPing {domain}:{port} [{ip}:{port}] 具有 32 字节的数据:")
-        received_count = 0
-        response_times = []
-        total_sent = 0
-
-        try:
-            while total_sent < request_nums:
-                if ctrl_c_used:  # Check if Ctrl+C was used
-                    break
-
-                start_time = time.time()
-                try:
-                    with socket.create_connection((ip, port), timeout=timeout / 1000) as conn:
-                        end_time = time.time()
-                        response_time = (end_time - start_time) * 1000
-                        received_count += 1
-                        response_times.append(response_time)
-                        print(f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL=64")
-                        total_sent += 1
-                        time.sleep(1)
-                except socket.timeout:
-                    print("请求超时。")
-                    time.sleep(1)
-                except (OSError, ConnectionRefusedError) as e:
-                    if isinstance(e, OSError) and e.errno == 10049:
-                        print("请求超时。")
-                        time.sleep(1)
-                    else:
-                        print(f"无法连接到 {ip}:{port}。")
-                        total_sent += 1
-                        time.sleep(1)
-
-        except KeyboardInterrupt:
-            pass
-
-        packet_loss_rate = ((total_sent - received_count) / total_sent) * 100 if total_sent > 0 else 0.0
-        avg_delay = sum(response_times) / received_count if received_count > 0 else 0.0
-        min_delay = min(response_times) if received_count > 0 else 0.0
-        max_delay = max(response_times) if received_count > 0 else 0.0
-
-        print(f"\n{ip}:{port} 的 TCPing 统计信息:")
-        print(f"    数据包: 已发送 = {total_sent}, 已接收 = {received_count}，丢失 = {int(total_sent - received_count)} ({packet_loss_rate:.1f}% 丢失)")
-
-        if received_count > 0:
-            print("往返行程的估计时间(以毫秒为单位):")
-            print(f"    最短 = {min_delay:.0f}ms，最长 = {max_delay:.0f}ms，平均 = {avg_delay:.0f}ms")
-        else:
-            print("请求全部超时，无法计算往返行程时间.")
-
-        if ctrl_c_used:  # Only print "Control-C" if Ctrl+C was used
-            print("Control-C")
-
-    except ValueError as e:
-        print(e)
-
-def tcping_continuous(domain, port, force_ipv4, force_ipv6, timeout=1000):
-    try:
-        ip = None
-
-        if force_ipv4:
-            # If the -4 option is used, perform DNS query only for IPv4
-            ip = resolve_ip(domain, force_ipv4=True)
-        elif force_ipv6:
-            # If the -6 option is used, perform DNS query only for IPv6
-            ip = resolve_ip(domain, force_ipv4=False)
-        else:
-            # Otherwise, use the system's network configuration to determine DNS query method
-            try:
-                # Try DNS query for IPv4
-                ip = resolve_ip(domain, force_ipv4=True)
-            except ValueError:
-                # If IPv4 query fails, use IPv6 for DNS query
-                ip = resolve_ip(domain, force_ipv4=False)
-
-        print(f"\n正在 TCPing {domain}:{port} [{ip}:{port}] 具有 32 字节的数据:")
         request_num = 1
         response_times = []
         received_count = 0
         lost_count = 0
 
         try:
-            while True:
+            while continuous_ping or request_num <= request_nums:
+                if ctrl_c_used:  # Check if Ctrl+C was used
+                    break
+
                 start_time = time.time()
                 try:
                     with socket.create_connection((ip, port), timeout=timeout / 1000) as conn:
+                        # Set the TTL value before sending the ping request
+                        conn.setsockopt(socket.IPPROTO_IP, socket.IP_TTL, ttl)
+                        
                         end_time = time.time()
                         response_time = (end_time - start_time) * 1000  # Convert to milliseconds
                         response_times.append(response_time)
-                        print(f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL=64")
+                        print(f"来自 {ip}:{port} 的回复: 字节=32 时间={response_time:.0f}ms TTL={ttl}")
                         received_count += 1
                         request_num += 1
                         time.sleep(1)
@@ -159,6 +92,7 @@ def tcping_continuous(domain, port, force_ipv4, force_ipv6, timeout=1000):
                         lost_count += 1
                         request_num += 1
                         time.sleep(1)
+
         except KeyboardInterrupt:
             pass
 
@@ -176,50 +110,40 @@ def tcping_continuous(domain, port, force_ipv4, force_ipv6, timeout=1000):
         else:
             print("请求全部超时，无法计算往返行程时间.")
 
+        if ctrl_c_used:  # Only print "Control-C" if Ctrl+C was used
+            print("Control-C")
+
     except ValueError as e:
         print(e)
 
-def print_help():
-    print("""
-用法: tcpingoo [-n count] [-d DNS_server] [-w timeout] [-4] [-6] target_name port
-
-选项:
-    -n count       计划发送的请求数 (默认: 4)。
-    -d DNS_server  自定义 DNS 服务器地址。
-    -w timeout     每次请求的超时时间(毫秒) (默认: 1000)。
-    -4             强制使用 IPv4 进行查询。
-    -6             强制使用 IPv6 进行查询。
-
-示例:
-    python tcpingoo.b.py yohoky.com 80
-    python tcpingoo.b.py yohoky.com 80 -d 1.1.1.1
-    python tcpingoo.b.py yohoky.com 80 -n 10 -w 500
-    python tcpingoo.b.py yohoky.com 80 -4
-    python tcpingoo.b.py yohoky.com 80 -6
-""")
-    sys.exit(0)
-
 def main():
-    parser = argparse.ArgumentParser(description="TCPing 工具 - 使用 TCP 协议检查目标主机端口的可达性。",
-                                     formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     epilog="示例:\n"
-                                            "python tcpingoo.b.py yohoky.com 80\n"
-                                            "python tcpingoo.b.py yohoky.com 80 -d 1.1.1.1\n"
-                                            "python tcpingoo.b.py yohoky.com 80 -n 10 -w 500\n"
-                                            "python tcpingoo.b.py yohoky.com 80 -4\n"
-                                            "python tcpingoo.b.py yohoky.com 80 -6")
+    script_name = os.path.basename(sys.argv[0])  # 获取脚本或可执行文件名称
+
+    parser = argparse.ArgumentParser(description=f"{script_name} - 使用 TCP 协议检查目标主机端口的可达性。",
+                                    formatter_class=argparse.RawDescriptionHelpFormatter,
+                                    epilog="示例:\n"
+                                            f"{script_name} example.com 80\n"
+                                            f"{script_name} example.com 80 -4\n"
+                                            f"{script_name} example.com 80 -6\n"
+                                            f"{script_name} example.com 80 -d 1.1.1.1\n"
+                                            f"{script_name} example.com 80 -h\n"
+                                            f"{script_name} example.com 80 -i 128\n"
+                                            f"{script_name} example.com 80 -n 4\n"
+                                            f"{script_name} example.com 80 -t\n"
+                                            f"{script_name} example.com 80 -w 1000",
+                                    usage="%(prog)s domain port [-4] [-6] [-d DNS_server] [-h] [-i TTL] [-n count] [-t] [-w timeout]")
+
 
     parser.add_argument("domain", help="要 TCPing 的目标主机名。")
     parser.add_argument("port", type=int, help="目标主机的端口号。")
-    parser.add_argument("-n", dest="request_nums", metavar="count", type=int, default=4, help="计划发送的请求数 (默认: 4)。")
+    parser.add_argument("-4", dest="force_ipv4", action="store_true", help="强制使用 IPv4。")
+    parser.add_argument("-6", dest="force_ipv6", action="store_true", help="强制使用 IPv6。")
     parser.add_argument("-d", dest="dns_server", metavar="DNS_server", default=None, help="自定义 DNS 服务器地址。")
-    parser.add_argument("-w", dest="timeout", metavar="timeout", type=int, default=1000, help="每次请求的超时时间(毫秒) (默认: 1000)。")
-    parser.add_argument("-4", dest="force_ipv4", action="store_true", help="强制使用 IPv4 进行查询。")
-    parser.add_argument("-6", dest="force_ipv6", action="store_true", help="强制使用 IPv6 进行查询。")
-    parser.add_argument("-t", dest="continuous_ping", action="store_true", help="无限执行TCPing直到手动Ctrl+C终止。")
-
-    if len(sys.argv) == 1:
-        print_help()
+    parser.add_argument("-h", "--help", action="help", help="显示帮助信息并退出。")
+    parser.add_argument("-i", dest="ttl", metavar="TTL", type=int, default=128, help="生存时间。")
+    parser.add_argument("-n", dest="request_nums", metavar="count", type=int, default=4, help="要发送的回显请求数。")
+    parser.add_argument("-t", dest="continuous_ping", action="store_true", help="Ping 指定的主机，直到停止。\n若要查看统计信息并继续操作，请键入 Ctrl+Break； \n若要停止，请键入 Ctrl+C。")
+    parser.add_argument("-w", dest="timeout", metavar="timeout", type=int, default=1000, help="等待每次回复的超时时间(毫秒)。")
 
     args = parser.parse_args()
 
@@ -227,14 +151,12 @@ def main():
         if args.request_nums < 1:
             args.request_nums = 4
 
-        if args.continuous_ping:
-            tcping_continuous(args.domain, args.port, args.force_ipv4, args.force_ipv6, args.timeout)
-        else:
-            tcping(args.domain, args.port, args.request_nums, args.force_ipv4, args.force_ipv6, args.timeout)
+        tcping(args.domain, args.port, args.request_nums, args.force_ipv4, args.force_ipv6, args.timeout, args.continuous_ping, args.ttl)
+
     except ValueError as e:
         print(e)
 
 if __name__ == '__main__':
-    # Set up the signal handler for SIGINT (Ctrl+C)
+    # 设置 SIGINT 的信号处理程序 (Ctrl+C)
     signal.signal(signal.SIGINT, signal_handler)
     main()

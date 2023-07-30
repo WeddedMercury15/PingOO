@@ -1,1 +1,0 @@
-nuitka --mingw64 --onefile --output-dir=dist tcptest.py

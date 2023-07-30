@@ -1,0 +1,1 @@
+nuitka --mingw64 --onefile --output-dir=dist tcpingoo.py
