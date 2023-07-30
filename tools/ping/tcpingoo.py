@@ -24,13 +24,19 @@ def signal_handler(sig, frame):
     ctrl_c_used = True
 
 
-# 解析目标主机的IP地址，支持IPv4和IPv6
-def resolve_ip(hostname, force_ipv4=False):
+# 解析目标主机的IP地址，支持IPv4和IPv6，并添加自定义DNS服务器支持
+def resolve_ip(hostname, force_ipv4=False, force_ipv6=False, dns_server=None):
     try:
         # 默认使用IPv4进行DNS查询
-        family = socket.AF_INET if force_ipv4 else socket.AF_INET6
+        family = socket.AF_INET if force_ipv4 else socket.AF_INET6 if force_ipv6 else socket.AF_UNSPEC
 
-        # 使用系统默认的DNS服务器进行查询
+        if dns_server:
+            # 如果提供了自定义DNS服务器，则设置自定义DNS服务器
+            # 请注意：在生产环境中，要确保传入的dns_server参数是可信的。
+            # 否则，可能会导致安全问题。
+            socket.setdns(dns_server)
+
+        # 使用系统默认的DNS服务器或者自定义DNS服务器进行查询
         addr_info = socket.getaddrinfo(hostname, None, family)
         ip = addr_info[0][4][0]  # 获取IP地址
 
@@ -49,7 +55,7 @@ def tcping(
     force_ipv6,
     timeout=1000,
     continuous_ping=False,
-    ttl=64,
+    ttl=128,
 ):
     try:
         ip = None
@@ -60,7 +66,7 @@ def tcping(
             ip = resolve_ip(domain, force_ipv4=True)
         elif force_ipv6:
             # 如果使用 -6 参数，只使用IPv6进行DNS查询
-            ip = resolve_ip(domain, force_ipv4=False)
+            ip = resolve_ip(domain, force_ipv6=True)
         else:
             # 否则，根据系统的网络配置来选择DNS查询方式
             try:
@@ -68,7 +74,7 @@ def tcping(
                 ip = resolve_ip(domain, force_ipv4=True)
             except ValueError:
                 # 如果IPv4查询失败，则使用IPv6进行DNS查询
-                ip = resolve_ip(domain, force_ipv4=False)
+                ip = resolve_ip(domain, force_ipv6=True)
 
         print(f"\n正在 TCPing {domain}:{port} [{ip}:{port}] 具有 32 字节的数据:")
         request_num = 1
@@ -192,7 +198,7 @@ def main():
         dest="request_nums",
         metavar="count",
         type=int,
-        default=4,
+        default=0,
         help="要发送的回显请求数。",
     )
     parser.add_argument(
