@@ -112,26 +112,6 @@ def tcping(domain, port, request_nums, force_ipv4, force_ipv6, timeout=1000, con
     except ValueError as e:
         print(e)
 
-def print_help():
-    print("""
-用法: tcpingoo [-n count] [-d DNS_server] [-w timeout] [-4] [-6] target_name port
-
-选项:
-    -n count       计划发送的请求数 (默认: 4)。
-    -d DNS_server  自定义 DNS 服务器地址。
-    -w timeout     每次请求的超时时间(毫秒) (默认: 1000)。
-    -4             强制使用 IPv4 进行查询。
-    -6             强制使用 IPv6 进行查询。
-
-示例:
-    python tcpingoo.b.py yohoky.com 80
-    python tcpingoo.b.py yohoky.com 80 -d 1.1.1.1
-    python tcpingoo.b.py yohoky.com 80 -n 10 -w 500
-    python tcpingoo.b.py yohoky.com 80 -4
-    python tcpingoo.b.py yohoky.com 80 -6
-""")
-    sys.exit(0)
-
 def main():
     parser = argparse.ArgumentParser(description="TCPing 工具 - 使用 TCP 协议检查目标主机端口的可达性。",
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -150,9 +130,6 @@ def main():
     parser.add_argument("-4", dest="force_ipv4", action="store_true", help="强制使用 IPv4 进行查询。")
     parser.add_argument("-6", dest="force_ipv6", action="store_true", help="强制使用 IPv6 进行查询。")
     parser.add_argument("-t", dest="continuous_ping", action="store_true", help="无限执行TCPing直到手动Ctrl+C终止。")
-
-    if len(sys.argv) == 1:
-        print_help()
 
     args = parser.parse_args()
 
