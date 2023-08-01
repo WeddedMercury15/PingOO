@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
@@ -23,7 +24,7 @@ func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (st
 	if dnsServer == "" {
 		// 未指定自定义DNS服务器，使用系统默认的DNS服务器
 		resolver := net.DefaultResolver
-		ips, err := resolver.LookupIPAddr(nil, hostname)
+		ips, err := resolver.LookupIPAddr(context.Background(), hostname)
 		if err != nil {
 			return "", err
 		}
@@ -64,7 +65,7 @@ func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (st
 	// 使用指定的DNS服务器进行解析
 	resolver := &net.Resolver{
 		PreferGo: true,
-		Dial: func(ctx net.Context, network, address string) (net.Conn, error) {
+		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
 			d := net.Dialer{
 				Timeout:   2 * time.Second,
 				DualStack: true,
@@ -73,7 +74,7 @@ func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (st
 		},
 	}
 
-	ips, err := resolver.LookupIPAddr(nil, hostname)
+	ips, err := resolver.LookupIPAddr(context.Background(), hostname)
 	if err != nil {
 		return "", err
 	}
