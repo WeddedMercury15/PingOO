@@ -11,12 +11,15 @@ import (
 	"time"
 )
 
+// ctrlCUsed 是一个全局标志变量，用于跟踪是否使用了Ctrl+C
 var ctrlCUsed = false
 
+// signalHandler 处理SIGINT信号（Ctrl+C）
 func signalHandler() {
 	ctrlCUsed = true
 }
 
+// resolveIP 解析目标主机的IP地址，支持IPv4和IPv6，并添加系统默认DNS服务器支持
 func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (string, error) {
 	if dnsServer == "" {
 		resolver := net.DefaultResolver
@@ -25,62 +28,7 @@ func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (st
 			return "", err
 		}
 
-		if forceIPv4 || !forceIPv6 {
-			for _, ip := range ips {
-				parsedIP := ip.IP
-				if parsedIP.To4() != nil {
-					return parsedIP.String(), nil
-				}
-			}
-		}
-
-		if forceIPv6 {
-			for _, ip := range ips {
-				parsedIP := ip.IP
-				if parsedIP.To4() == nil {
-					return parsedIP.String(), nil
-				}
-			}
-		}
-
-		return "", fmt.Errorf("UDPing 请求找不到主机 %s。请检查该名称，然后重试。", hostname)
-	}
-
-	var family string
-	if forceIPv4 {
-		family = "ip4"
-	} else if forceIPv6 {
-		family = "ip6"
-	} else {
-		family = ""
-	}
-
-	resolver := &net.Resolver{
-		PreferGo: true,
-		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
-			d := net.Dialer{
-				Timeout:   2 * time.Second,
-				DualStack: true,
-			}
-			return d.DialContext(ctx, "udp", dnsServer+":53")
-		},
-	}
-
-	ips, err := resolver.LookupIPAddr(context.Background(), hostname)
-	if err != nil {
-		return "", err
-	}
-
-	for _, ip := range ips {
-		parsedIP := ip.IP
-		if family == "" || (family == "ip4" && parsedIP.To4() != nil) || (family == "ip6" && parsedIP.To4() == nil) {
-			return parsedIP.String(), nil
-		}
-	}
-
-	return "", fmt.Errorf("UDPing 请求找不到主机 %s。请检查该名称，然后重试。", hostname)
-}
-
+// udping 执行UDP Ping操作，测量响应时间和丢包率
 func udping(domain string, port int, requestNums int, forceIPv4, forceIPv6 bool, timeout time.Duration, continuousPing bool, ttl int, dnsServer string, isIP bool) {
 	ip, err := resolveIP(domain, forceIPv4, forceIPv6, dnsServer)
 	if err != nil {
@@ -88,73 +36,7 @@ func udping(domain string, port int, requestNums int, forceIPv4, forceIPv6 bool,
 		return
 	}
 
-	if isIP {
-		fmt.Printf("\n正在 UDPing %s:%d 具有 32 字节的数据:\n", domain, port)
-	} else {
-		fmt.Printf("\n正在 UDPing %s:%d [%s:%d] 具有 32 字节的数据:\n", domain, port, ip, port)
-	}
-
-	requestNum := 1
-	responseTimes := []float64{}
-	receivedCount := 0
-	lostCount := 0
-
-	for continuousPing || requestNum <= requestNums {
-		if ctrlCUsed {
-			break
-		}
-
-		startTime := time.Now()
-
-		// 创建UDP连接
-		conn, err := net.DialTimeout("udp", fmt.Sprintf("%s:%d", ip, port), timeout)
-		if err == nil {
-			defer conn.Close()
-
-			err = conn.SetDeadline(time.Now().Add(timeout))
-			if err != nil {
-				fmt.Println("设置连接超时时间时出错:", err)
-				break
-			}
-
-			endTime := time.Now()
-			responseTime := endTime.Sub(startTime).Seconds() * 1000
-			responseTimes = append(responseTimes, responseTime)
-			fmt.Printf("来自 %s:%d 的回复: 字节=32 时间=%.0fms TTL=%d\n", ip, port, responseTime, ttl)
-			receivedCount++
-		} else {
-			if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
-				fmt.Println("请求超时。")
-			} else {
-				fmt.Printf("无法连接到 %s:%d。\n", ip, port)
-			}
-			lostCount++
-		}
-
-		requestNum++
-		time.Sleep(1 * time.Second)
-	}
-
-	totalPacketsSent := requestNum - 1
-	packetLossRate := float64(lostCount) / float64(totalPacketsSent) * 100.0
-	avgDelay := sum(responseTimes) / float64(receivedCount)
-	minDelay := min(responseTimes)
-	maxDelay := max(responseTimes)
-
-	fmt.Printf("\n%s:%d 的 UDPing 统计信息:\n", ip, port)
-	fmt.Printf("    数据包: 已发送 = %d, 已接收 = %d，丢失 = %d (%.1f%% 丢失)\n", totalPacketsSent, receivedCount, lostCount, packetLossRate)
-	if receivedCount > 0 {
-		fmt.Printf("往返行程的估计时间(以毫秒为单位):\n")
-		fmt.Printf("    最短 = %.0fms，最长 = %.0fms，平均 = %.0fms\n", minDelay, maxDelay, avgDelay)
-	} else {
-		fmt.Println("所有请求均超时，无法计算往返行程时间.")
-	}
-
-	if ctrlCUsed {
-		fmt.Println("Control-C")
-	}
-}
-
+// sum 计算切片中所有元素的总和
 func sum(values []float64) float64 {
 	total := 0.0
 	for _, v := range values {
@@ -163,6 +45,7 @@ func sum(values []float64) float64 {
 	return total
 }
 
+// min 返回切片中的最小值
 func min(values []float64) float64 {
 	if len(values) == 0 {
 		return 0
@@ -176,6 +59,7 @@ func min(values []float64) float64 {
 	return minValue
 }
 
+// max 返回切片中的最大值
 func max(values []float64) float64 {
 	if len(values) == 0 {
 		return 0
@@ -264,6 +148,7 @@ func main() {
 		}
 	}
 
+	// 注册Ctrl+C信号处理函数
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
@@ -271,6 +156,7 @@ func main() {
 		signalHandler()
 	}()
 
+	// 检查目标是否是IP地址
 	targetIP := net.ParseIP(domain)
 
 	udping(domain, port, requestNums, forceIPv4, forceIPv6, time.Duration(timeout)*time.Millisecond, continuousPing, ttl, dnsServer, targetIP != nil)
