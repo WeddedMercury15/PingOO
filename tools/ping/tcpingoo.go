@@ -21,61 +21,45 @@ func signalHandler() {
 
 // resolveIP 解析目标主机的IP地址，支持IPv4和IPv6，并添加自定义DNS服务器支持
 func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (string, error) {
-	var family uint16
+	family := ""
 	if forceIPv4 {
-		family = dns.TypeA
+		family = "ip4"
 	} else if forceIPv6 {
-		family = dns.TypeAAAA
-	} else {
-		family = dns.TypeA
+		family = "ip6"
 	}
 
 	var client *dns.Client
 	if dnsServer != "" {
 		// 如果提供了自定义DNS服务器，则设置自定义DNS服务器
-		// 注意：在生产环境中，请确保dnsServer参数是可信的。
+		// 请注意：在生产环境中，请确保dnsServer参数是可信的。
 		// 否则，可能会导致安全问题。
-		client = &dns.Client{Net: "udp", Dialer: &dns.Dialer{Address: dnsServer}}
+		client = &dns.Client{Net: "udp", Dialer: &net.Dialer{Timeout: 2 * time.Second}}
 	} else {
-		client = new(dns.Client)
+		client = &dns.Client{Net: "udp", Dialer: &net.Dialer{Timeout: 2 * time.Second}}
 	}
 
 	msg := new(dns.Msg)
-	msg.SetQuestion(dns.Fqdn(hostname), family)
+	msg.SetQuestion(dns.Fqdn(hostname), dns.TypeA)
+	if forceIPv4 {
+		msg.SetQuestion(dns.Fqdn(hostname), dns.TypeA)
+	} else if forceIPv6 {
+		msg.SetQuestion(dns.Fqdn(hostname), dns.TypeAAAA)
+	}
 
-	reply, _, err := client.Exchange(msg, "8.8.8.8:53")
+	resp, _, err := client.Exchange(msg, dnsServer+":53")
 	if err != nil {
 		return "", err
 	}
 
-	if len(reply.Answer) == 0 {
-		return "", fmt.Errorf("TCPing 请求找不到主机 %s。请检查该名称，然后重试。", hostname)
-	}
-
-	var ip string
-	for _, ans := range reply.Answer {
-		switch rr := ans.(type) {
-		case *dns.A:
-			ip = rr.A.String()
-			if family == dns.TypeA {
-				// 如果强制使用IPv4，并且找到了IPv4地址，则直接返回
-				return ip, nil
-			}
-		case *dns.AAAA:
-			ip = rr.AAAA.String()
-			if family == dns.TypeAAAA {
-				// 如果强制使用IPv6，并且找到了IPv6地址，则直接返回
-				return ip, nil
-			}
+	for _, answer := range resp.Answer {
+		if a, ok := answer.(*dns.A); ok && family == "ip4" {
+			return a.A.String(), nil
+		} else if aaaa, ok := answer.(*dns.AAAA); ok && family == "ip6" {
+			return aaaa.AAAA.String(), nil
 		}
 	}
 
-	// 如果没有找到匹配的地址类型，则返回第一个找到的地址
-	if ip != "" {
-		return ip, nil
-	}
-
-	return "", fmt.Errorf("TCPing 请求找不到主机 %s。请检查该名称，然后重试。", hostname)
+	return "", fmt.Errorf("TCPing 请求找不到主机 %s。请检查该名称，然后重试.", hostname)
 }
 
 // tcping 执行TCP Ping操作，测量响应时间和丢包率
