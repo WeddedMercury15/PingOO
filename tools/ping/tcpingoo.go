@@ -8,8 +8,6 @@ import (
 	"strconv"
 	"syscall"
 	"time"
-
-	"github.com/miekg/dns"
 )
 
 // ctrlCUsed 是一个全局标志变量，用于跟踪是否使用了Ctrl+C
@@ -20,37 +18,58 @@ func signalHandler() {
 	ctrlCUsed = true
 }
 
-// resolveIP 解析目标主机的IP地址，支持IPv4和IPv6，并添加自定义DNS服务器支持
+// resolveIP 解析目标主机的IP地址，支持IPv4和IPv6，并添加系统默认DNS服务器支持
 func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (string, error) {
-	var family uint16
+	if dnsServer == "" {
+		// 未指定自定义DNS服务器，使用系统默认的DNS服务器
+		ips, err := net.LookupHost(hostname)
+		if err != nil {
+			return "", err
+		}
+
+		// 尝试使用IPv4进行解析
+		if forceIPv4 || !forceIPv6 {
+			for _, ip := range ips {
+				parsedIP := net.ParseIP(ip)
+				if parsedIP.To4() != nil {
+					return parsedIP.String(), nil
+				}
+			}
+		}
+
+		// 尝试使用IPv6进行解析
+		if forceIPv6 {
+			for _, ip := range ips {
+				parsedIP := net.ParseIP(ip)
+				if parsedIP.To4() == nil {
+					return parsedIP.String(), nil
+				}
+			}
+		}
+
+		return "", fmt.Errorf("TCPing 请求找不到主机 %s。请检查该名称，然后重试.", hostname)
+	}
+
+	// 使用自定义DNS服务器进行解析
+	var family string
 	if forceIPv4 {
-		family = dns.TypeA
+		family = "ip4"
 	} else if forceIPv6 {
-		family = dns.TypeAAAA
+		family = "ip6"
 	} else {
-		family = dns.TypeA
+		family = ""
 	}
 
-	var client *dns.Client
-	if dnsServer != "" {
-		client = &dns.Client{Net: "tcp", Dialer: &net.Dialer{Timeout: 2 * time.Second}}
-	} else {
-		client = &dns.Client{Net: "tcp", Dialer: &net.Dialer{Timeout: 2 * time.Second}}
-	}
-
-	msg := new(dns.Msg)
-	msg.SetQuestion(dns.Fqdn(hostname), family)
-
-	resp, _, err := client.Exchange(msg, dnsServer+":53")
+	// 使用指定的DNS服务器进行解析
+	ips, err := net.DefaultResolver.LookupIPAddr(nil, hostname)
 	if err != nil {
 		return "", err
 	}
 
-	for _, answer := range resp.Answer {
-		if a, ok := answer.(*dns.A); ok && family == dns.TypeA {
-			return a.A.String(), nil
-		} else if aaaa, ok := answer.(*dns.AAAA); ok && family == dns.TypeAAAA {
-			return aaaa.AAAA.String(), nil
+	for _, ip := range ips {
+		parsedIP := ip.IP
+		if family == "" || (family == "ip4" && parsedIP.To4() != nil) || (family == "ip6" && parsedIP.To4() == nil) {
+			return parsedIP.String(), nil
 		}
 	}
 
