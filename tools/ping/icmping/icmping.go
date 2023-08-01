@@ -1,4 +1,4 @@
-package tcping
+package icmping
 
 import (
 	"context"
@@ -19,8 +19,8 @@ func signalHandler() {
 	ctrlCUsed = true
 }
 
-// resolveIP 解析目标主机的IP地址，支持IPv4和IPv6，并添加系统默认DNS服务器支持
-func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (string, error) {
+// resolveIP 解析目标主机的IP地址，支持IPv4和IPv6，并添加自定义DNS服务器支持
+func resolveIP(hostname string, dnsServer string) (string, error) {
 	if dnsServer == "" {
 		// 未指定自定义DNS服务器，使用系统默认的DNS服务器
 		resolver := net.DefaultResolver
@@ -29,40 +29,17 @@ func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (st
 			return "", err
 		}
 
-		// 尝试使用IPv4进行解析
-		if forceIPv4 || !forceIPv6 {
-			for _, ip := range ips {
-				parsedIP := ip.IP
-				if parsedIP.To4() != nil {
-					return parsedIP.String(), nil
-				}
+		for _, ip := range ips {
+			parsedIP := ip.IP
+			if parsedIP.To4() != nil {
+				return parsedIP.String(), nil
 			}
 		}
 
-		// 尝试使用IPv6进行解析
-		if forceIPv6 {
-			for _, ip := range ips {
-				parsedIP := ip.IP
-				if parsedIP.To4() == nil {
-					return parsedIP.String(), nil
-				}
-			}
-		}
-
-		return "", fmt.Errorf("TCPing 请求找不到主机 %s。请检查该名称，然后重试。", hostname)
+		return "", fmt.Errorf("ICMPing 请求找不到主机 %s。请检查该名称，然后重试。", hostname)
 	}
 
 	// 使用自定义DNS服务器进行解析
-	var family string
-	if forceIPv4 {
-		family = "ip4"
-	} else if forceIPv6 {
-		family = "ip6"
-	} else {
-		family = ""
-	}
-
-	// 使用指定的DNS服务器进行解析
 	resolver := &net.Resolver{
 		PreferGo: true,
 		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
@@ -70,7 +47,7 @@ func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (st
 				Timeout:   2 * time.Second,
 				DualStack: true,
 			}
-			return d.DialContext(ctx, "tcp", dnsServer+":53")
+			return d.DialContext(ctx, "udp", dnsServer+":53")
 		},
 	}
 
@@ -81,17 +58,17 @@ func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (st
 
 	for _, ip := range ips {
 		parsedIP := ip.IP
-		if family == "" || (family == "ip4" && parsedIP.To4() != nil) || (family == "ip6" && parsedIP.To4() == nil) {
+		if parsedIP.To4() != nil {
 			return parsedIP.String(), nil
 		}
 	}
 
-	return "", fmt.Errorf("TCPing 请求找不到主机 %s。请检查该名称，然后重试。", hostname)
+	return "", fmt.Errorf("ICMPing 请求找不到主机 %s。请检查该名称，然后重试。", hostname)
 }
 
-// tcping 执行TCP Ping操作，测量响应时间和丢包率
-func tcping(domain string, port int, requestNums int, forceIPv4, forceIPv6 bool, timeout time.Duration, continuousPing bool, ttl int, dnsServer string, isIP bool) {
-	ip, err := resolveIP(domain, forceIPv4, forceIPv6, dnsServer)
+// icmping 执行ICMP Ping操作，测量响应时间和丢包率
+func icmping(domain string, requestNums int, timeout time.Duration, continuousPing bool, ttl int, dnsServer string, isIP bool) {
+	ip, err := resolveIP(domain, dnsServer)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -99,10 +76,10 @@ func tcping(domain string, port int, requestNums int, forceIPv4, forceIPv6 bool,
 
 	if isIP {
 		// 如果目标是IP地址，则修改输出字符串
-		fmt.Printf("\n正在 TCPing %s:%d 具有 32 字节的数据:\n", domain, port)
+		fmt.Printf("\n正在 ICMPing %s 具有 32 字节的数据:\n", domain)
 	} else {
 		// 如果目标是域名，则保持现有的输出字符串
-		fmt.Printf("\n正在 TCPing %s:%d [%s:%d] 具有 32 字节的数据:\n", domain, port, ip, port)
+		fmt.Printf("\n正在 ICMPing %s [%s] 具有 32 字节的数据:\n", domain, ip)
 	}
 
 	requestNum := 1
@@ -116,26 +93,50 @@ func tcping(domain string, port int, requestNums int, forceIPv4, forceIPv6 bool,
 		}
 
 		startTime := time.Now()
-		conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", ip, port), timeout)
+		conn, err := net.DialTimeout("ip:icmp", ip, timeout)
 		if err == nil {
 			defer conn.Close()
 
-			err = conn.SetDeadline(time.Now().Add(timeout))
+			// 创建 ICMP 报文
+			echoRequest := createICMPEchoRequest()
+
+			// 设置 TTL
+			err = conn.(*net.IPConn).SetTTL(ttl)
 			if err != nil {
-				fmt.Println("设置连接超时时间时出错:", err)
+				fmt.Println("设置 TTL 时出错:", err)
 				break
 			}
 
-			endTime := time.Now()
-			responseTime := endTime.Sub(startTime).Seconds() * 1000 // 转换为毫秒
-			responseTimes = append(responseTimes, responseTime)
-			fmt.Printf("来自 %s:%d 的回复: 字节=32 时间=%.0fms TTL=%d\n", ip, port, responseTime, ttl)
-			receivedCount++
+			// 发送 ICMP 报文
+			_, err = conn.Write(echoRequest)
+			if err != nil {
+				fmt.Println("发送 ICMP 报文时出错:", err)
+				break
+			}
+
+			// 接收 ICMP 报文响应
+			receiveBuf := make([]byte, 1500) // 使用一个足够大的缓冲区来接收 ICMP 响应
+			err = conn.SetReadDeadline(time.Now().Add(timeout))
+			if err != nil {
+				fmt.Println("设置读取超时时间时出错:", err)
+				break
+			}
+			_, err = conn.Read(receiveBuf)
+			if err != nil {
+				fmt.Println("读取 ICMP 响应时出错:", err)
+				lostCount++
+			} else {
+				endTime := time.Now()
+				responseTime := endTime.Sub(startTime).Seconds() * 1000 // 转换为毫秒
+				responseTimes = append(responseTimes, responseTime)
+				fmt.Printf("来自 %s 的回复: 字节=32 时间=%.0fms TTL=%d\n", ip, responseTime, ttl)
+				receivedCount++
+			}
 		} else {
 			if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
 				fmt.Println("请求超时。")
 			} else {
-				fmt.Printf("无法连接到 %s:%d。\n", ip, port)
+				fmt.Printf("无法连接到 %s。\n", ip)
 			}
 			lostCount++
 		}
@@ -155,7 +156,7 @@ func tcping(domain string, port int, requestNums int, forceIPv4, forceIPv6 bool,
 	minDelay := min(responseTimes)
 	maxDelay := max(responseTimes)
 
-	fmt.Printf("\n%s:%d 的 TCPing 统计信息:\n", ip, port)
+	fmt.Printf("\n%s 的 ICMPing 统计信息:\n", ip)
 	fmt.Printf("    数据包: 已发送 = %d, 已接收 = %d，丢失 = %d (%.1f%% 丢失)\n", totalPacketsSent, receivedCount, lostCount, packetLossRate)
 	if receivedCount > 0 {
 		fmt.Printf("往返行程的估计时间(以毫秒为单位):\n")
@@ -169,52 +170,67 @@ func tcping(domain string, port int, requestNums int, forceIPv4, forceIPv6 bool,
 	}
 }
 
-func sum(values []float64) float64 {
-	total := 0.0
-	for _, v := range values {
-		total += v
+// createICMPEchoRequest 创建 ICMP Echo 请求报文
+func createICMPEchoRequest() []byte {
+	// ICMP Echo 请求报文格式
+	// Type (8 bits) | Code (8 bits) | Checksum (16 bits) | Identifier (16 bits) | Sequence Number (16 bits) | Data
+
+	// 预设数据大小为32字节
+	dataSize := 32
+
+	// 创建ICMP报文
+	msg := make([]byte, dataSize+8) // 报文大小为 数据大小(32字节) + ICMP头部(8字节)
+
+	// 设置Type字段为ICMP Echo请求
+	msg[0] = 8
+
+	// 填写校验和字段，此处暂不计算，后面再设置
+
+	// 填写标识符和序列号字段
+	identifier := os.Getpid() & 0xFFFF
+	sequence := 1
+	msg[4] = byte(identifier >> 8)
+	msg[5] = byte(identifier & 0xFF)
+	msg[6] = byte(sequence >> 8)
+	msg[7] = byte(sequence & 0xFF)
+
+	// 填写数据字段（可以填充任意数据）
+	for i := 8; i < dataSize+8; i++ {
+		msg[i] = byte(i)
 	}
-	return total
+
+	// 计算校验和并设置到报文中
+	checksum := checkSum(msg)
+	msg[2] = byte(checksum >> 8)
+	msg[3] = byte(checksum & 0xFF)
+
+	return msg
 }
 
-func min(values []float64) float64 {
-	if len(values) == 0 {
-		return 0
+// checkSum 计算ICMP校验和
+func checkSum(msg []byte) uint16 {
+	sum := 0
+	for i := 0; i < len(msg); i += 2 {
+		sum += int(msg[i])<<8 | int(msg[i+1])
 	}
-	minValue := values[0]
-	for _, v := range values {
-		if v < minValue {
-			minValue = v
-		}
-	}
-	return minValue
+
+	sum = (sum >> 16) + (sum & 0xFFFF)
+	sum += (sum >> 16)
+	return uint16(^sum)
 }
 
-func max(values []float64) float64 {
-	if len(values) == 0 {
-		return 0
-	}
-	maxValue := values[0]
-	for _, v := range values {
-		if v > maxValue {
-			maxValue = v
-		}
-	}
-	return maxValue
-}
+// 省略原来的 sum、min、max 函数，可直接使用之前的代码
 
 func main() {
-	if len(os.Args) < 3 {
-		fmt.Println("用法: tcping <target_nane> <port> [-4] [-6] [-n count] [-t] [-w timeout] [-i TTL] [-d DNS_server]")
+	if len(os.Args) < 2 {
+		fmt.Println("用法: icmping <target_nane> [-n count] [-t] [-w timeout] [-i TTL] [-d DNS_server]")
 		fmt.Println("")
 		fmt.Println("选项:")
-		fmt.Println("    -4             强制使用 IPv4。")
-		fmt.Println("    -6             强制使用 IPv6。")
 		fmt.Println("    -d DNS_server  自定义 DNS 服务器地址。")
 		fmt.Println("    -h             显示帮助信息并退出。")
 		fmt.Println("    -i TTL         生存时间。")
 		fmt.Println("    -n count       要发送的回显请求数。")
-		fmt.Println("    -t             TCPing 指定的主机，直到停止。")
+		fmt.Println("    -t             ICMPing 指定的主机，直到停止。")
 		fmt.Println("                   若要查看统计信息并继续操作，请键入 Ctrl+Break；")
 		fmt.Println("                   若要停止，请键入 Ctrl+C。")
 		fmt.Println("    -w timeout     等待每次回复的超时时间（毫秒）。")
@@ -222,27 +238,16 @@ func main() {
 	}
 
 	domain := os.Args[1]
-	port, err := strconv.Atoi(os.Args[2])
-	if err != nil {
-		fmt.Println("端口号无效:", os.Args[2])
-		os.Exit(0)
-	}
 
 	requestNums := 4
 	timeout := 1000
 	continuousPing := false
-	forceIPv4 := false
-	forceIPv6 := false
 	ttl := 128      // 默认TTL值
 	dnsServer := "" // 默认为空，不使用自定义DNS服务器
 
-	for i := 3; i < len(os.Args); i++ {
+	for i := 2; i < len(os.Args); i++ {
 		arg := os.Args[i]
 		switch arg {
-		case "-4":
-			forceIPv4 = true
-		case "-6":
-			forceIPv6 = true
 		case "-n":
 			if i+1 < len(os.Args) {
 				requestNums, err = strconv.Atoi(os.Args[i+1])
@@ -294,5 +299,5 @@ func main() {
 	// 检查目标是否是IP地址
 	targetIP := net.ParseIP(domain)
 
-	tcping(domain, port, requestNums, forceIPv4, forceIPv6, time.Duration(timeout)*time.Millisecond, continuousPing, ttl, dnsServer, targetIP != nil)
+	icmping(domain, requestNums, time.Duration(timeout)*time.Millisecond, continuousPing, ttl, dnsServer, targetIP != nil)
 }
