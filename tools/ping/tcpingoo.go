@@ -22,7 +22,8 @@ func signalHandler() {
 func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (string, error) {
 	if dnsServer == "" {
 		// 未指定自定义DNS服务器，使用系统默认的DNS服务器
-		ips, err := net.LookupHost(hostname)
+		resolver := net.DefaultResolver
+		ips, err := resolver.LookupIPAddr(nil, hostname)
 		if err != nil {
 			return "", err
 		}
@@ -30,7 +31,7 @@ func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (st
 		// 尝试使用IPv4进行解析
 		if forceIPv4 || !forceIPv6 {
 			for _, ip := range ips {
-				parsedIP := net.ParseIP(ip)
+				parsedIP := ip.IP
 				if parsedIP.To4() != nil {
 					return parsedIP.String(), nil
 				}
@@ -40,7 +41,7 @@ func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (st
 		// 尝试使用IPv6进行解析
 		if forceIPv6 {
 			for _, ip := range ips {
-				parsedIP := net.ParseIP(ip)
+				parsedIP := ip.IP
 				if parsedIP.To4() == nil {
 					return parsedIP.String(), nil
 				}
@@ -61,7 +62,18 @@ func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (st
 	}
 
 	// 使用指定的DNS服务器进行解析
-	ips, err := net.DefaultResolver.LookupIPAddr(nil, hostname)
+	resolver := &net.Resolver{
+		PreferGo: true,
+		Dial: func(ctx net.Context, network, address string) (net.Conn, error) {
+			d := net.Dialer{
+				Timeout:   2 * time.Second,
+				DualStack: true,
+			}
+			return d.DialContext(ctx, "tcp", dnsServer+":53")
+		},
+	}
+
+	ips, err := resolver.LookupIPAddr(nil, hostname)
 	if err != nil {
 		return "", err
 	}
