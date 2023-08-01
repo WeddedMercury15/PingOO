@@ -7,6 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/miekg/dns"
 )
 
 // ctrlCUsed 是一个全局标志变量，用于跟踪是否使用了Ctrl+C
@@ -17,33 +19,63 @@ func signalHandler() {
 	ctrlCUsed = true
 }
 
-// resolveIP 解主机名的IP地址，支持IPv4和IPv6，并添加自定义DNS服务器支持
+// resolveIP 解析目标主机的IP地址，支持IPv4和IPv6，并添加自定义DNS服务器支持
 func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (string, error) {
-	family := ""
+	var family uint16
 	if forceIPv4 {
-		family = "ip4"
+		family = dns.TypeA
 	} else if forceIPv6 {
-		family = "ip6"
+		family = dns.TypeAAAA
+	} else {
+		family = dns.TypeA
 	}
 
-	addrInfo, err := net.LookupIP(hostname)
+	var client *dns.Client
+	if dnsServer != "" {
+		// 如果提供了自定义DNS服务器，则设置自定义DNS服务器
+		// 注意：在生产环境中，请确保dnsServer参数是可信的。
+		// 否则，可能会导致安全问题。
+		client = &dns.Client{Net: "udp", Dialer: &dns.Dialer{Address: dnsServer}}
+	} else {
+		client = new(dns.Client)
+	}
+
+	msg := new(dns.Msg)
+	msg.SetQuestion(dns.Fqdn(hostname), family)
+
+	reply, _, err := client.Exchange(msg, "8.8.8.8:53")
 	if err != nil {
 		return "", err
 	}
 
-	ip := ""
-	for _, addr := range addrInfo {
-		if family == "" || addr.String() == family {
-			ip = addr.String()
-			break
+	if len(reply.Answer) == 0 {
+		return "", fmt.Errorf("TCPing 请求找不到主机 %s。请检查该名称，然后重试。", hostname)
+	}
+
+	var ip string
+	for _, ans := range reply.Answer {
+		switch rr := ans.(type) {
+		case *dns.A:
+			ip = rr.A.String()
+			if family == dns.TypeA {
+				// 如果强制使用IPv4，并且找到了IPv4地址，则直接返回
+				return ip, nil
+			}
+		case *dns.AAAA:
+			ip = rr.AAAA.String()
+			if family == dns.TypeAAAA {
+				// 如果强制使用IPv6，并且找到了IPv6地址，则直接返回
+				return ip, nil
+			}
 		}
 	}
 
-	if ip == "" {
-		return "", fmt.Errorf("TCPing 请求找不到主机 %s。请检查该名称，然后重试.", hostname)
+	// 如果没有找到匹配的地址类型，则返回第一个找到的地址
+	if ip != "" {
+		return ip, nil
 	}
 
-	return ip, nil
+	return "", fmt.Errorf("TCPing 请求找不到主机 %s。请检查该名称，然后重试。", hostname)
 }
 
 // tcping 执行TCP Ping操作，测量响应时间和丢包率
