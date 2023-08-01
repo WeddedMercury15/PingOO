@@ -1,4 +1,4 @@
-package udping
+package tcping
 
 import (
 	"context"
@@ -22,21 +22,153 @@ func signalHandler() {
 // resolveIP 解析目标主机的IP地址，支持IPv4和IPv6，并添加系统默认DNS服务器支持
 func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (string, error) {
 	if dnsServer == "" {
+		// 未指定自定义DNS服务器，使用系统默认的DNS服务器
 		resolver := net.DefaultResolver
 		ips, err := resolver.LookupIPAddr(context.Background(), hostname)
 		if err != nil {
 			return "", err
 		}
 
-// udping 执行UDP Ping操作，测量响应时间和丢包率
-func udping(domain string, port int, requestNums int, forceIPv4, forceIPv6 bool, timeout time.Duration, continuousPing bool, ttl int, dnsServer string, isIP bool) {
+		// 尝试使用IPv4进行解析
+		if forceIPv4 || !forceIPv6 {
+			for _, ip := range ips {
+				parsedIP := ip.IP
+				if parsedIP.To4() != nil {
+					return parsedIP.String(), nil
+				}
+			}
+		}
+
+		// 尝试使用IPv6进行解析
+		if forceIPv6 {
+			for _, ip := range ips {
+				parsedIP := ip.IP
+				if parsedIP.To4() == nil {
+					return parsedIP.String(), nil
+				}
+			}
+		}
+
+		return "", fmt.Errorf("TCPing 请求找不到主机 %s。请检查该名称，然后重试。", hostname)
+	}
+
+	// 使用自定义DNS服务器进行解析
+	var family string
+	if forceIPv4 {
+		family = "ip4"
+	} else if forceIPv6 {
+		family = "ip6"
+	} else {
+		family = ""
+	}
+
+	// 使用指定的DNS服务器进行解析
+	resolver := &net.Resolver{
+		PreferGo: true,
+		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+			d := net.Dialer{
+				Timeout:   2 * time.Second,
+				DualStack: true,
+			}
+			return d.DialContext(ctx, "tcp", dnsServer+":53")
+		},
+	}
+
+	ips, err := resolver.LookupIPAddr(context.Background(), hostname)
+	if err != nil {
+		return "", err
+	}
+
+	for _, ip := range ips {
+		parsedIP := ip.IP
+		if family == "" || (family == "ip4" && parsedIP.To4() != nil) || (family == "ip6" && parsedIP.To4() == nil) {
+			return parsedIP.String(), nil
+		}
+	}
+
+	return "", fmt.Errorf("TCPing 请求找不到主机 %s。请检查该名称，然后重试。", hostname)
+}
+
+// tcping 执行TCP Ping操作，测量响应时间和丢包率
+func tcping(domain string, port int, requestNums int, forceIPv4, forceIPv6 bool, timeout time.Duration, continuousPing bool, ttl int, dnsServer string, isIP bool) {
 	ip, err := resolveIP(domain, forceIPv4, forceIPv6, dnsServer)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-// sum 计算切片中所有元素的总和
+	if isIP {
+		// 如果目标是IP地址，则修改输出字符串
+		fmt.Printf("\n正在 TCPing %s:%d 具有 32 字节的数据:\n", domain, port)
+	} else {
+		// 如果目标是域名，则保持现有的输出字符串
+		fmt.Printf("\n正在 TCPing %s:%d [%s:%d] 具有 32 字节的数据:\n", domain, port, ip, port)
+	}
+
+	requestNum := 1
+	responseTimes := []float64{}
+	receivedCount := 0
+	lostCount := 0
+
+	for continuousPing || requestNum <= requestNums {
+		if ctrlCUsed { // 检查是否使用了 Ctrl+C
+			break
+		}
+
+		startTime := time.Now()
+		conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", ip, port), timeout)
+		if err == nil {
+			defer conn.Close()
+
+			err = conn.SetDeadline(time.Now().Add(timeout))
+			if err != nil {
+				fmt.Println("设置连接超时时间时出错:", err)
+				break
+			}
+
+			endTime := time.Now()
+			responseTime := endTime.Sub(startTime).Seconds() * 1000 // 转换为毫秒
+			responseTimes = append(responseTimes, responseTime)
+			fmt.Printf("来自 %s:%d 的回复: 字节=32 时间=%.0fms TTL=%d\n", ip, port, responseTime, ttl)
+			receivedCount++
+		} else {
+			if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+				fmt.Println("请求超时。")
+			} else {
+				fmt.Printf("无法连接到 %s:%d。\n", ip, port)
+			}
+			lostCount++
+		}
+
+		requestNum++
+		time.Sleep(1 * time.Second)
+	}
+
+	// 计算发送的总数据包数（requestNum - 1）
+	totalPacketsSent := requestNum - 1
+
+	// 计算丢包率，考虑没有接收到数据包的情况
+	packetLossRate := float64(lostCount) / float64(totalPacketsSent) * 100.0
+
+	// 计算平均、最小和最大延迟
+	avgDelay := sum(responseTimes) / float64(receivedCount)
+	minDelay := min(responseTimes)
+	maxDelay := max(responseTimes)
+
+	fmt.Printf("\n%s:%d 的 TCPing 统计信息:\n", ip, port)
+	fmt.Printf("    数据包: 已发送 = %d, 已接收 = %d，丢失 = %d (%.1f%% 丢失)\n", totalPacketsSent, receivedCount, lostCount, packetLossRate)
+	if receivedCount > 0 {
+		fmt.Printf("往返行程的估计时间(以毫秒为单位):\n")
+		fmt.Printf("    最短 = %.0fms，最长 = %.0fms，平均 = %.0fms\n", minDelay, maxDelay, avgDelay)
+	} else {
+		fmt.Println("所有请求均超时，无法计算往返行程时间.")
+	}
+
+	if ctrlCUsed { // 如果使用 Ctrl+C，则仅打印“Control-C”
+		fmt.Println("Control-C")
+	}
+}
+
 func sum(values []float64) float64 {
 	total := 0.0
 	for _, v := range values {
@@ -45,7 +177,6 @@ func sum(values []float64) float64 {
 	return total
 }
 
-// min 返回切片中的最小值
 func min(values []float64) float64 {
 	if len(values) == 0 {
 		return 0
@@ -59,7 +190,6 @@ func min(values []float64) float64 {
 	return minValue
 }
 
-// max 返回切片中的最大值
 func max(values []float64) float64 {
 	if len(values) == 0 {
 		return 0
@@ -75,7 +205,7 @@ func max(values []float64) float64 {
 
 func main() {
 	if len(os.Args) < 3 {
-		fmt.Println("用法: udping <target_nane> <port> [-4] [-6] [-n count] [-w timeout] [-i TTL] [-d DNS_server]")
+		fmt.Println("用法: tcping <target_nane> <port> [-4] [-6] [-n count] [-t] [-w timeout] [-i TTL] [-d DNS_server]")
 		fmt.Println("")
 		fmt.Println("选项:")
 		fmt.Println("    -4             强制使用 IPv4。")
@@ -84,6 +214,9 @@ func main() {
 		fmt.Println("    -h             显示帮助信息并退出。")
 		fmt.Println("    -i TTL         生存时间。")
 		fmt.Println("    -n count       要发送的回显请求数。")
+		fmt.Println("    -t             TCPing 指定的主机，直到停止。")
+		fmt.Println("                   若要查看统计信息并继续操作，请键入 Ctrl+Break；")
+		fmt.Println("                   若要停止，请键入 Ctrl+C。")
 		fmt.Println("    -w timeout     等待每次回复的超时时间（毫秒）。")
 		os.Exit(0)
 	}
@@ -100,8 +233,8 @@ func main() {
 	continuousPing := false
 	forceIPv4 := false
 	forceIPv6 := false
-	ttl := 128
-	dnsServer := ""
+	ttl := 128      // 默认TTL值
+	dnsServer := "" // 默认为空，不使用自定义DNS服务器
 
 	for i := 3; i < len(os.Args); i++ {
 		arg := os.Args[i]
@@ -119,6 +252,8 @@ func main() {
 				}
 				i++
 			}
+		case "-t":
+			continuousPing = true
 		case "-w":
 			if i+1 < len(os.Args) {
 				timeout, err = strconv.Atoi(os.Args[i+1])
@@ -159,5 +294,5 @@ func main() {
 	// 检查目标是否是IP地址
 	targetIP := net.ParseIP(domain)
 
-	udping(domain, port, requestNums, forceIPv4, forceIPv6, time.Duration(timeout)*time.Millisecond, continuousPing, ttl, dnsServer, targetIP != nil)
+	tcping(domain, port, requestNums, forceIPv4, forceIPv6, time.Duration(timeout)*time.Millisecond, continuousPing, ttl, dnsServer, targetIP != nil)
 }
