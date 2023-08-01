@@ -33,9 +33,6 @@ func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (st
 
 	var client *dns.Client
 	if dnsServer != "" {
-		// 如果提供了自定义DNS服务器，则设置自定义DNS服务器
-		// 请注意：在生产环境中，请确保dnsServer参数是可信的。
-		// 否则，可能会导致安全问题。
 		client = &dns.Client{Net: "tcp", Dialer: &net.Dialer{Timeout: 2 * time.Second}}
 	} else {
 		client = &dns.Client{Net: "tcp", Dialer: &net.Dialer{Timeout: 2 * time.Second}}
@@ -44,7 +41,7 @@ func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (st
 	msg := new(dns.Msg)
 	msg.SetQuestion(dns.Fqdn(hostname), family)
 
-	resp, _, err := client.Exchange(msg, "1.1.1.1:53")
+	resp, _, err := client.Exchange(msg, dnsServer+":53")
 	if err != nil {
 		return "", err
 	}
@@ -61,8 +58,8 @@ func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (st
 }
 
 // tcping 执行TCP Ping操作，测量响应时间和丢包率
-func tcping(domain string, port int, requestNums int, forceIPv4, forceIPv6 bool, timeout time.Duration, continuousPing bool, ttl int) {
-	ip, err := resolveIP(domain, forceIPv4, forceIPv6, "")
+func tcping(domain string, port int, requestNums int, forceIPv4, forceIPv6 bool, timeout time.Duration, continuousPing bool, ttl int, dnsServer string) {
+	ip, err := resolveIP(domain, forceIPv4, forceIPv6, dnsServer)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -169,7 +166,7 @@ func max(values []float64) float64 {
 
 func main() {
 	if len(os.Args) < 3 {
-		fmt.Println("用法: tcping <目标主机> <端口> [-4] [-6] [-n 数量] [-t] [-w 超时时间] [-i TTL]")
+		fmt.Println("用法: tcping <目标主机> <端口> [-4] [-6] [-n 数量] [-t] [-w 超时时间] [-i TTL] [-d DNS服务器]")
 		os.Exit(0)
 	}
 
@@ -185,7 +182,8 @@ func main() {
 	continuousPing := false
 	forceIPv4 := false
 	forceIPv6 := false
-	ttl := 128 // 默认TTL值
+	ttl := 128      // 默认TTL值
+	dnsServer := "" // 默认为空，不使用自定义DNS服务器
 
 	for i := 3; i < len(os.Args); i++ {
 		arg := os.Args[i]
@@ -223,6 +221,11 @@ func main() {
 				}
 				i++
 			}
+		case "-d":
+			if i+1 < len(os.Args) {
+				dnsServer = os.Args[i+1]
+				i++
+			}
 		default:
 			fmt.Println("无效的参数:", arg)
 			os.Exit(1)
@@ -237,7 +240,7 @@ func main() {
 		signalHandler()
 	}()
 
-	tcping(domain, port, requestNums, forceIPv4, forceIPv6, time.Duration(timeout)*time.Millisecond, continuousPing, ttl)
+	tcping(domain, port, requestNums, forceIPv4, forceIPv6, time.Duration(timeout)*time.Millisecond, continuousPing, ttl, dnsServer)
 }
 
 func atoi(s string) int {
