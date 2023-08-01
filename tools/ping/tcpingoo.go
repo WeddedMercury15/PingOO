@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"os/signal"
 	"time"
 )
 
@@ -11,7 +12,7 @@ import (
 var ctrlCUsed = false
 
 // signalHandler 处理SIGINT信号（Ctrl+C）
-func signalHandler(sig os.Signal) {
+func signalHandler() {
 	ctrlCUsed = true
 }
 
@@ -190,6 +191,11 @@ func main() {
 			os.Exit(1)
 		}
 	}
+
+	// 注册Ctrl+C信号处理函数
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt)
+	go signalHandler()
 
 	tcping(domain, port, requestNums, forceIPv4, forceIPv6, time.Duration(timeout)*time.Millisecond, continuousPing, 128)
 }
