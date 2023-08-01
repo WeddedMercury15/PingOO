@@ -49,7 +49,7 @@ func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (st
 			}
 		}
 
-		return "", fmt.Errorf("TCPing 请求找不到主机 %s。请检查该名称，然后重试.", hostname)
+		return "", fmt.Errorf("TCPing 请求找不到主机 %s。请检查该名称，然后重试。", hostname)
 	}
 
 	// 使用自定义DNS服务器进行解析
@@ -86,7 +86,7 @@ func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (st
 		}
 	}
 
-	return "", fmt.Errorf("TCPing 请求找不到主机 %s。请检查该名称，然后重试.", hostname)
+	return "", fmt.Errorf("TCPing 请求找不到主机 %s。请检查该名称，然后重试。", hostname)
 }
 
 // tcping 执行TCP Ping操作，测量响应时间和丢包率
@@ -206,7 +206,7 @@ func main() {
 	port, err := strconv.Atoi(os.Args[2])
 	if err != nil {
 		fmt.Println("端口号无效:", os.Args[2])
-		os.Exit(1)
+		os.Exit(0)
 	}
 
 	requestNums := 4
@@ -229,7 +229,7 @@ func main() {
 				requestNums, err = strconv.Atoi(os.Args[i+1])
 				if err != nil {
 					fmt.Println("请求数量无效:", os.Args[i+1])
-					os.Exit(1)
+					os.Exit(0)
 				}
 				i++
 			}
@@ -240,7 +240,7 @@ func main() {
 				timeout, err = strconv.Atoi(os.Args[i+1])
 				if err != nil {
 					fmt.Println("超时时间无效:", os.Args[i+1])
-					os.Exit(1)
+					os.Exit(0)
 				}
 				i++
 			}
@@ -249,7 +249,7 @@ func main() {
 				ttl, err = strconv.Atoi(os.Args[i+1])
 				if err != nil {
 					fmt.Println("TTL值无效:", os.Args[i+1])
-					os.Exit(1)
+					os.Exit(0)
 				}
 				i++
 			}
@@ -260,7 +260,7 @@ func main() {
 			}
 		default:
 			fmt.Println("无效的参数:", arg)
-			os.Exit(1)
+			os.Exit(0)
 		}
 	}
 
