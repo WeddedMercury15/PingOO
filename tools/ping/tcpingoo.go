@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -21,11 +22,13 @@ func signalHandler() {
 
 // resolveIP 解析目标主机的IP地址，支持IPv4和IPv6，并添加自定义DNS服务器支持
 func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (string, error) {
-	family := ""
+	var family uint16
 	if forceIPv4 {
-		family = "ip4"
+		family = dns.TypeA
 	} else if forceIPv6 {
-		family = "ip6"
+		family = dns.TypeAAAA
+	} else {
+		family = dns.TypeA
 	}
 
 	var client *dns.Client
@@ -33,28 +36,23 @@ func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (st
 		// 如果提供了自定义DNS服务器，则设置自定义DNS服务器
 		// 请注意：在生产环境中，请确保dnsServer参数是可信的。
 		// 否则，可能会导致安全问题。
-		client = &dns.Client{Net: "udp", Dialer: &net.Dialer{Timeout: 2 * time.Second}}
+		client = &dns.Client{Net: "tcp", Dialer: &net.Dialer{Timeout: 2 * time.Second}}
 	} else {
-		client = &dns.Client{Net: "udp", Dialer: &net.Dialer{Timeout: 2 * time.Second}}
+		client = &dns.Client{Net: "tcp", Dialer: &net.Dialer{Timeout: 2 * time.Second}}
 	}
 
 	msg := new(dns.Msg)
-	msg.SetQuestion(dns.Fqdn(hostname), dns.TypeA)
-	if forceIPv4 {
-		msg.SetQuestion(dns.Fqdn(hostname), dns.TypeA)
-	} else if forceIPv6 {
-		msg.SetQuestion(dns.Fqdn(hostname), dns.TypeAAAA)
-	}
+	msg.SetQuestion(dns.Fqdn(hostname), family)
 
-	resp, _, err := client.Exchange(msg, dnsServer+":53")
+	resp, _, err := client.Exchange(msg, "1.1.1.1:53")
 	if err != nil {
 		return "", err
 	}
 
 	for _, answer := range resp.Answer {
-		if a, ok := answer.(*dns.A); ok && family == "ip4" {
+		if a, ok := answer.(*dns.A); ok && family == dns.TypeA {
 			return a.A.String(), nil
-		} else if aaaa, ok := answer.(*dns.AAAA); ok && family == "ip6" {
+		} else if aaaa, ok := answer.(*dns.AAAA); ok && family == dns.TypeAAAA {
 			return aaaa.AAAA.String(), nil
 		}
 	}
@@ -176,7 +174,11 @@ func main() {
 	}
 
 	domain := os.Args[1]
-	port := atoi(os.Args[2])
+	port, err := strconv.Atoi(os.Args[2])
+	if err != nil {
+		fmt.Println("端口号无效:", os.Args[2])
+		os.Exit(1)
+	}
 
 	requestNums := 4
 	timeout := 1000
@@ -194,19 +196,31 @@ func main() {
 			forceIPv6 = true
 		case "-n":
 			if i+1 < len(os.Args) {
-				requestNums = atoi(os.Args[i+1])
+				requestNums, err = strconv.Atoi(os.Args[i+1])
+				if err != nil {
+					fmt.Println("请求数量无效:", os.Args[i+1])
+					os.Exit(1)
+				}
 				i++
 			}
 		case "-t":
 			continuousPing = true
 		case "-w":
 			if i+1 < len(os.Args) {
-				timeout = atoi(os.Args[i+1])
+				timeout, err = strconv.Atoi(os.Args[i+1])
+				if err != nil {
+					fmt.Println("超时时间无效:", os.Args[i+1])
+					os.Exit(1)
+				}
 				i++
 			}
 		case "-i":
 			if i+1 < len(os.Args) {
-				ttl = atoi(os.Args[i+1])
+				ttl, err = strconv.Atoi(os.Args[i+1])
+				if err != nil {
+					fmt.Println("TTL值无效:", os.Args[i+1])
+					os.Exit(1)
+				}
 				i++
 			}
 		default:
