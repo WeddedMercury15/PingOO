@@ -155,7 +155,7 @@ func max(values []float64) float64 {
 
 func main() {
 	if len(os.Args) < 3 {
-		fmt.Println("用法: tcping <目标主机> <端口> [-4] [-6] [-n 数量] [-t] [-w 超时时间]")
+		fmt.Println("用法: tcping <目标主机> <端口> [-4] [-6] [-n 数量] [-t] [-w 超时时间] [-i TTL]")
 		os.Exit(0)
 	}
 
@@ -167,6 +167,7 @@ func main() {
 	continuousPing := false
 	forceIPv4 := false
 	forceIPv6 := false
+	ttl := 128 // 默认TTL值
 
 	for i := 3; i < len(os.Args); i++ {
 		arg := os.Args[i]
@@ -187,6 +188,11 @@ func main() {
 				timeout = atoi(os.Args[i+1])
 				i++
 			}
+		case "-i":
+			if i+1 < len(os.Args) {
+				ttl = atoi(os.Args[i+1])
+				i++
+			}
 		default:
 			fmt.Println("无效的参数:", arg)
 			os.Exit(1)
@@ -201,7 +207,7 @@ func main() {
 		signalHandler()
 	}()
 
-	tcping(domain, port, requestNums, forceIPv4, forceIPv6, time.Duration(timeout)*time.Millisecond, continuousPing, 128)
+	tcping(domain, port, requestNums, forceIPv4, forceIPv6, time.Duration(timeout)*time.Millisecond, continuousPing, ttl)
 }
 
 func atoi(s string) int {
