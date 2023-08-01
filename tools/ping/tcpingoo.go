@@ -17,7 +17,7 @@ func signalHandler() {
 	ctrlCUsed = true
 }
 
-// resolveIP 解析目标主机的IP地址，支持IPv4和IPv6，并添加自定义DNS服务器支持
+// resolveIP 解主机名的IP地址，支持IPv4和IPv6，并添加自定义DNS服务器支持
 func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (string, error) {
 	family := ""
 	if forceIPv4 {
@@ -156,7 +156,7 @@ func max(values []float64) float64 {
 func main() {
 	if len(os.Args) < 3 {
 		fmt.Println("用法: tcping <目标主机> <端口> [-4] [-6] [-n 数量] [-t] [-w 超时时间]")
-		os.Exit(1)
+		os.Exit(0)
 	}
 
 	domain := os.Args[1]
