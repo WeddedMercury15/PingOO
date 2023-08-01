@@ -1,4 +1,4 @@
-package tcping
+package udping
 
 import (
 	"context"
@@ -49,7 +49,7 @@ func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (st
 			}
 		}
 
-		return "", fmt.Errorf("TCPing 请求找不到主机 %s。请检查该名称，然后重试。", hostname)
+		return "", fmt.Errorf("UDPing 请求找不到主机 %s。请检查该名称，然后重试。", hostname)
 	}
 
 	// 使用自定义DNS服务器进行解析
@@ -70,7 +70,7 @@ func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (st
 				Timeout:   2 * time.Second,
 				DualStack: true,
 			}
-			return d.DialContext(ctx, "tcp", dnsServer+":53")
+			return d.DialContext(ctx, "udp", dnsServer+":53")
 		},
 	}
 
@@ -86,11 +86,11 @@ func resolveIP(hostname string, forceIPv4, forceIPv6 bool, dnsServer string) (st
 		}
 	}
 
-	return "", fmt.Errorf("TCPing 请求找不到主机 %s。请检查该名称，然后重试。", hostname)
+	return "", fmt.Errorf("UDPing 请求找不到主机 %s。请检查该名称，然后重试。", hostname)
 }
 
-// tcping 执行TCP Ping操作，测量响应时间和丢包率
-func tcping(domain string, port int, requestNums int, forceIPv4, forceIPv6 bool, timeout time.Duration, continuousPing bool, ttl int, dnsServer string, isIP bool) {
+// udping 执行UDP Ping操作，测量响应时间和丢包率
+func udping(domain string, port int, requestNums int, forceIPv4, forceIPv6 bool, timeout time.Duration, continuousPing bool, ttl int, dnsServer string, isIP bool) {
 	ip, err := resolveIP(domain, forceIPv4, forceIPv6, dnsServer)
 	if err != nil {
 		fmt.Println(err)
@@ -99,10 +99,10 @@ func tcping(domain string, port int, requestNums int, forceIPv4, forceIPv6 bool,
 
 	if isIP {
 		// 如果目标是IP地址，则修改输出字符串
-		fmt.Printf("\n正在 TCPing %s:%d 具有 32 字节的数据:\n", domain, port)
+		fmt.Printf("\n正在 UDPing %s:%d 具有 32 字节的数据:\n", domain, port)
 	} else {
 		// 如果目标是域名，则保持现有的输出字符串
-		fmt.Printf("\n正在 TCPing %s:%d [%s:%d] 具有 32 字节的数据:\n", domain, port, ip, port)
+		fmt.Printf("\n正在 UDPing %s:%d [%s:%d] 具有 32 字节的数据:\n", domain, port, ip, port)
 	}
 
 	requestNum := 1
@@ -116,7 +116,13 @@ func tcping(domain string, port int, requestNums int, forceIPv4, forceIPv6 bool,
 		}
 
 		startTime := time.Now()
-		conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", ip, port), timeout)
+		udpAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", ip, port))
+		if err != nil {
+			fmt.Println("解析UDP地址时出错:", err)
+			break
+		}
+
+		conn, err := net.DialUDP("udp", nil, udpAddr)
 		if err == nil {
 			defer conn.Close()
 
@@ -126,17 +132,32 @@ func tcping(domain string, port int, requestNums int, forceIPv4, forceIPv6 bool,
 				break
 			}
 
-			endTime := time.Now()
-			responseTime := endTime.Sub(startTime).Seconds() * 1000 // 转换为毫秒
-			responseTimes = append(responseTimes, responseTime)
-			fmt.Printf("来自 %s:%d 的回复: 字节=32 时间=%.0fms TTL=%d\n", ip, port, responseTime, ttl)
-			receivedCount++
-		} else {
-			if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
-				fmt.Println("请求超时。")
-			} else {
-				fmt.Printf("无法连接到 %s:%d。\n", ip, port)
+			// 发送一个简单的数据包，可以是任意内容
+			_, err := conn.Write([]byte("Ping"))
+			if err != nil {
+				fmt.Println("发送UDP数据包时出错:", err)
+				break
 			}
+
+			// 接收响应
+			buf := make([]byte, 32)
+			_, _, err = conn.ReadFromUDP(buf)
+			if err == nil {
+				endTime := time.Now()
+				responseTime := endTime.Sub(startTime).Seconds() * 1000 // 转换为毫秒
+				responseTimes = append(responseTimes, responseTime)
+				fmt.Printf("来自 %s:%d 的回复: 字节=32 时间=%.0fms TTL=%d\n", ip, port, responseTime, ttl)
+				receivedCount++
+			} else {
+				if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+					fmt.Println("请求超时。")
+				} else {
+					fmt.Printf("无法接收来自 %s:%d 的响应。\n", ip, port)
+				}
+				lostCount++
+			}
+		} else {
+			fmt.Printf("无法连接到 %s:%d。\n", ip, port)
 			lostCount++
 		}
 
@@ -155,7 +176,7 @@ func tcping(domain string, port int, requestNums int, forceIPv4, forceIPv6 bool,
 	minDelay := min(responseTimes)
 	maxDelay := max(responseTimes)
 
-	fmt.Printf("\n%s:%d 的 TCPing 统计信息:\n", ip, port)
+	fmt.Printf("\n%s:%d 的 UDPing 统计信息:\n", ip, port)
 	fmt.Printf("    数据包: 已发送 = %d, 已接收 = %d，丢失 = %d (%.1f%% 丢失)\n", totalPacketsSent, receivedCount, lostCount, packetLossRate)
 	if receivedCount > 0 {
 		fmt.Printf("往返行程的估计时间(以毫秒为单位):\n")
@@ -205,7 +226,7 @@ func max(values []float64) float64 {
 
 func main() {
 	if len(os.Args) < 3 {
-		fmt.Println("用法: tcping <target_nane> <port> [-4] [-6] [-n count] [-t] [-w timeout] [-i TTL] [-d DNS_server]")
+		fmt.Println("用法: udping <target_nane> <port> [-4] [-6] [-n count] [-t] [-w timeout] [-i TTL] [-d DNS_server]")
 		fmt.Println("")
 		fmt.Println("选项:")
 		fmt.Println("    -4             强制使用 IPv4。")
@@ -214,7 +235,7 @@ func main() {
 		fmt.Println("    -h             显示帮助信息并退出。")
 		fmt.Println("    -i TTL         生存时间。")
 		fmt.Println("    -n count       要发送的回显请求数。")
-		fmt.Println("    -t             TCPing 指定的主机，直到停止。")
+		fmt.Println("    -t             UDPing 指定的主机，直到停止。")
 		fmt.Println("                   若要查看统计信息并继续操作，请键入 Ctrl+Break；")
 		fmt.Println("                   若要停止，请键入 Ctrl+C。")
 		fmt.Println("    -w timeout     等待每次回复的超时时间（毫秒）。")
@@ -294,5 +315,5 @@ func main() {
 	// 检查目标是否是IP地址
 	targetIP := net.ParseIP(domain)
 
-	tcping(domain, port, requestNums, forceIPv4, forceIPv6, time.Duration(timeout)*time.Millisecond, continuousPing, ttl, dnsServer, targetIP != nil)
+	udping(domain, port, requestNums, forceIPv4, forceIPv6, time.Duration(timeout)*time.Millisecond, continuousPing, ttl, dnsServer, targetIP != nil)
 }
