@@ -199,7 +199,6 @@ func main() {
 	go func() {
 		<-signalChan
 		signalHandler()
-		os.Exit(0)
 	}()
 
 	tcping(domain, port, requestNums, forceIPv4, forceIPv6, time.Duration(timeout)*time.Millisecond, continuousPing, 128)
