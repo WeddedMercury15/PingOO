@@ -198,7 +198,19 @@ func max(values []float64) float64 {
 
 func main() {
 	if len(os.Args) < 3 {
-		fmt.Println("用法: tcping <目标主机> <端口> [-4] [-6] [-n 数量] [-t] [-w 超时时间] [-i TTL] [-d DNS服务器]")
+		fmt.Println("用法: tcping <target_nane> <port> [-4] [-6] [-n count] [-t] [-w timeout] [-i TTL] [-d DNS_server]")
+		fmt.Println("")
+		fmt.Println("选项:")
+		fmt.Println("    -4             强制使用 IPv4。")
+		fmt.Println("    -6             强制使用 IPv6。")
+		fmt.Println("    -d DNS_server  自定义 DNS 服务器地址。")
+		fmt.Println("    -h             显示帮助信息并退出。")
+		fmt.Println("    -i TTL         生存时间。")
+		fmt.Println("    -n count       要发送的回显请求数。")
+		fmt.Println("    -t             Ping 指定的主机，直到停止。")
+		fmt.Println("                   若要查看统计信息并继续操作，请键入 Ctrl+Break；")
+		fmt.Println("                   若要停止，请键入 Ctrl+C。")
+		fmt.Println("    -w timeout     等待每次回复的超时时间（毫秒）。")
 		os.Exit(0)
 	}
 
