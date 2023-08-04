@@ -34,7 +34,7 @@ func main() {
 	fmt.Printf("延迟: %.2f ms\n", fastestServer.Ping)
 
 	fmt.Println("开始测速...")
-	downloadSpeed, uploadSpeed, err := runSpeedTest(fastestServer.URL)
+	downloadSpeed, uploadSpeed, err := runSpeedTest(fastestServer.Name)
 	if err != nil {
 		log.Fatal("测速失败:", err)
 	}
