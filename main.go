@@ -26,21 +26,24 @@ func main() {
 }
 
 func layout(g *gocui.Gui) error {
-	maxX, maxY := g.Size()
+	maxX, _ := g.Size() // 这里将maxY的声明改成了_
 
-	// 创建标题视图
-	if v, err := g.SetView("title", maxX/2-10, 0, maxX/2+10, 3); err != nil {
+	// 创建边框
+	if v, err := g.SetView("border", maxX/2-12, 0, maxX/2+12, 12); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
-		v.Title = "PingOO"
-		v.Wrap = true
+		v.Frame = true
+		v.Title = " PingOO "
+		v.Highlight = true
+		v.BgColor = gocui.ColorGreen
+		v.FgColor = gocui.ColorBlack
 	}
 
 	// 创建按钮
 	buttons := []string{"按钮1", "按钮2", "按钮3"}
 	for i, btn := range buttons {
-		if v, err := g.SetView(fmt.Sprintf("btn%d", i+1), maxX/2-10, (i+1)*4, maxX/2+10, (i+1)*4+3); err != nil {
+		if v, err := g.SetView(fmt.Sprintf("btn%d", i+1), maxX/2-10, (i+1)*3, maxX/2+10, (i+1)*3+2); err != nil {
 			if err != gocui.ErrUnknownView {
 				return err
 			}
