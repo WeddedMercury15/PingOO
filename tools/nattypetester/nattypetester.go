@@ -4,10 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strings"
-	"text/tabwriter"
 
 	"github.com/ccding/go-stun/stun"
+	"github.com/olekukonko/tablewriter"
 )
 
 func main() {
@@ -28,18 +27,21 @@ func main() {
 	}
 
 	// 创建表格写入器
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.AlignLeft)
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"项目", "结果"})
+	table.SetBorder(false)
+	table.SetColumnSeparator("")
+	table.SetRowSeparator("")
+	table.SetCenterSeparator("")
 
 	// 打印测试结果
-	fmt.Fprintln(w, "项目\t结果")
-	fmt.Fprintln(w, strings.Repeat("-", 30))
-	fmt.Fprintf(w, "NAT类型\t%s\n", nat)
-	fmt.Fprintf(w, "外部IP地址族\t%s\n", host.Family())
-	fmt.Fprintf(w, "外部IP地址\t%s\n", host.IP())
-	fmt.Fprintf(w, "外部端口\t%d\n", host.Port())
-	fmt.Fprintf(w, "NAT类型描述\t%s\n", getNATDescription(nat))
+	table.Append([]string{"NAT类型", fmt.Sprintf("%s", nat)})
+	table.Append([]string{"外部IP地址族", fmt.Sprintf("%d", host.Family())})
+	table.Append([]string{"外部IP地址", fmt.Sprintf("%s", host.IP())})
+	table.Append([]string{"外部端口", fmt.Sprintf("%d", host.Port())})
+	table.Append([]string{"NAT类型描述", getNATDescription(nat)})
 
-	w.Flush()
+	table.Render()
 }
 
 // getNATDescription 根据NAT类型返回相应的描述信息
