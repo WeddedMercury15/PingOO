@@ -5,7 +5,7 @@ import (
 	"log"
 	"math"
 
-	"github.com/showwin/speedtest-go/speedtest"
+	"github.com/showwin/speedtest-go/speedtest/v2"
 )
 
 type Server struct {
