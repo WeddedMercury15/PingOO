@@ -2,81 +2,66 @@ package main
 
 import (
 	"fmt"
+	"os"
 
-	"github.com/eiannone/keyboard"
-	"github.com/inancgumus/screen"
-	"github.com/showwin/speedtest-go/speedtest"
+	ui "github.com/gizak/termui/v3"
+	"github.com/gizak/termui/v3/widgets"
 )
 
 func main() {
-	err := keyboard.Open()
-	if err != nil {
-		panic(err)
+	if err := ui.Init(); err != nil {
+		fmt.Printf("failed to initialize termui: %v", err)
+		os.Exit(1)
 	}
-	defer keyboard.Close()
+	defer ui.Close()
 
-	var speedtestClient = speedtest.New()
-	serverList, _ := speedtestClient.FetchServers()
-	targets, _ := serverList.FindServer([]int{})
+	// 创建一个全屏的布局
+	grid := ui.NewGrid()
+	grid.SetRect(0, 0, 100, 40)
 
-	menuItems := []string{"测试下载速度", "测试上传速度", "测试延迟", "退出"}
-	selectedIndex := 0
+	// 创建一个标题
+	title := widgets.NewParagraph()
+	title.Text = "PingOO"
+	title.SetRect(0, 0, 100, 5)
+	title.TextStyle.Fg = ui.ColorYellow
+	title.Border = false
+	title.TextStyle.Modifier = ui.ModifierBold
 
+	// 创建三个按钮
+	btn1 := widgets.NewButton("Button 1")
+	btn1.SetRect(25, 10, 45, 13)
+	btn1.TextStyle.Fg = ui.ColorWhite
+	btn1.BorderStyle.Fg = ui.ColorCyan
+
+	btn2 := widgets.NewButton("Button 2")
+	btn2.SetRect(25, 15, 45, 18)
+	btn2.TextStyle.Fg = ui.ColorWhite
+	btn2.BorderStyle.Fg = ui.ColorCyan
+
+	btn3 := widgets.NewButton("Button 3")
+	btn3.SetRect(25, 20, 45, 23)
+	btn3.TextStyle.Fg = ui.ColorWhite
+	btn3.BorderStyle.Fg = ui.ColorCyan
+
+	// 添加组件到布局
+	grid.Set(
+		ui.NewRow(1.0/6, title),
+		ui.NewRow(1.0/6, widgets.NewSpacer()),
+		ui.NewRow(1.0/6, btn1),
+		ui.NewRow(1.0/6, widgets.NewSpacer()),
+		ui.NewRow(1.0/6, btn2),
+		ui.NewRow(1.0/6, widgets.NewSpacer()),
+		ui.NewRow(1.0/6, btn3),
+	)
+
+	ui.Render(grid)
+
+	// 监听终端输入
+	uiEvents := ui.PollEvents()
 	for {
-		screen.Clear()
-		screen.MoveTopLeft()
-
-		fmt.Println("选择一个选项:")
-		for i, item := range menuItems {
-			if i == selectedIndex {
-				fmt.Printf("-> %s\n", item)
-			} else {
-				fmt.Printf("   %s\n", item)
-			}
-		}
-
-		char, key, err := keyboard.GetKey()
-		if err != nil {
-			panic(err)
-		}
-
-		switch key {
-		case keyboard.KeyArrowUp:
-			if selectedIndex > 0 {
-				selectedIndex--
-			}
-		case keyboard.KeyArrowDown:
-			if selectedIndex < len(menuItems)-1 {
-				selectedIndex++
-			}
-		case keyboard.KeyEnter:
-			switch selectedIndex {
-			case 0:
-				for _, s := range targets {
-					s.PingTest(nil)
-					s.DownloadTest()
-					fmt.Printf("从 %s 下载速度: %.2f Mbps\n", s.Name, s.DLSpeed)
-				}
-			case 1:
-				for _, s := range targets {
-					s.PingTest(nil)
-					s.UploadTest()
-					fmt.Printf("从 %s 上传速度: %.2f Mbps\n", s.Name, s.ULSpeed)
-				}
-			case 2:
-				for _, s := range targets {
-					s.PingTest(nil)
-					fmt.Printf("从 %s 延迟: %d ms\n", s.Name, s.Latency)
-				}
-			case 3:
-				return
-			default:
-				fmt.Println("无效的选项")
-			}
-			fmt.Println("\n按任意键继续...")
-			keyboard.GetKey()
-		default:
-			fmt.Printf("您按下了 %q 键\n", char)
+		e := <-uiEvents
+		if e.Type == ui.KeyboardEvent && e.ID == "q" {
+			break
 		}
 	}
 }
