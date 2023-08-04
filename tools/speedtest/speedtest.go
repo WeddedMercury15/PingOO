@@ -5,7 +5,7 @@ import (
 	"log"
 	"math"
 
-	"github.com/showwin/speedtest-go/speedtest/v2"
+	"github.com/showwin/speedtest-go/speedtest"
 )
 
 type Server struct {
@@ -44,31 +44,31 @@ func main() {
 }
 
 func getServerList() ([]Server, error) {
-	client, err := speedtest.NewClient(speedtest.DefaultConfig())
+	speedtestClient := speedtest.New()
+
+	serverList, err := speedtestClient.FetchServers()
 	if err != nil {
 		return nil, err
 	}
 
-	// 获取服务器列表
-	servers, err := client.AllServers()
+	targets, err := serverList.FindServer([]int{})
 	if err != nil {
 		return nil, err
 	}
 
-	var serverList []Server
-	for _, s := range servers {
-		serverList = append(serverList, Server{
+	var servers []Server
+	for _, s := range targets {
+		servers = append(servers, Server{
 			URL:  s.URL,
 			Name: s.Name,
-			Ping: s.Latency.Milliseconds(),
+			Ping: s.Latency.Seconds() * 1000,
 		})
 	}
 
-	return serverList, nil
+	return servers, nil
 }
 
 func chooseFastestServer(servers []Server) *Server {
-	// 根据服务器的ping值排序，选择最小的ping值的服务器
 	var fastestServer *Server
 	minPing := math.MaxFloat64
 
@@ -82,26 +82,31 @@ func chooseFastestServer(servers []Server) *Server {
 	return fastestServer
 }
 
-func runSpeedTest(serverURL string) (float64, float64, error) {
-	client, err := speedtest.NewClient(speedtest.DefaultConfig())
+func runSpeedTest(serverName string) (float64, float64, error) {
+	speedtestClient := speedtest.New()
+
+	serverList, err := speedtestClient.FetchServers()
 	if err != nil {
 		return 0, 0, err
 	}
 
-	server, err := client.GetServer(serverURL)
-	if err != nil {
-		return 0, 0, err
+	var targetServer *speedtest.Server
+	for _, server := range serverList {
+		if server.Name == serverName {
+			targetServer = server
+			break
+		}
 	}
 
-	downloadSpeed, err := client.Download(server)
-	if err != nil {
-		return 0, 0, err
+	if targetServer == nil {
+		return 0, 0, fmt.Errorf("could not find server with name %s", serverName)
 	}
 
-	uploadSpeed, err := client.Upload(server)
-	if err != nil {
-		return 0, 0, err
-	}
+	targetServer.DownloadTest()
+	targetServer.UploadTest()
 
-	return downloadSpeed.Megabits, uploadSpeed.Megabits, nil
+	downloadSpeed := targetServer.DLSpeed
+	uploadSpeed := targetServer.ULSpeed
+
+	return downloadSpeed, uploadSpeed, nil
 }
