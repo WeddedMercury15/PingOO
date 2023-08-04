@@ -1,4 +1,4 @@
-package main
+package nattypetester
 
 import (
 	"flag"
@@ -9,7 +9,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
-func main() {
+func nattypetester() {
 	// 定义命令行参数
 	var serverAddr string
 	flag.StringVar(&serverAddr, "s", "stunserver.stunprotocol.org:3478", "STUN服务器地址")
