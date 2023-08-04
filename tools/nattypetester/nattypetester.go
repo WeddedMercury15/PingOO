@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/ccding/go-stun/stun"
@@ -27,19 +28,18 @@ func main() {
 	}
 
 	// 创建表格写入器
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', tabwriter.AlignRight|tabwriter.Debug)
-	defer w.Flush()
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.AlignLeft)
 
 	// 打印测试结果
 	fmt.Fprintln(w, "项目\t结果")
+	fmt.Fprintln(w, strings.Repeat("-", 30))
 	fmt.Fprintf(w, "NAT类型\t%s\n", nat)
 	fmt.Fprintf(w, "外部IP地址族\t%s\n", host.Family())
 	fmt.Fprintf(w, "外部IP地址\t%s\n", host.IP())
 	fmt.Fprintf(w, "外部端口\t%d\n", host.Port())
+	fmt.Fprintf(w, "NAT类型描述\t%s\n", getNATDescription(nat))
 
-	// 打印NAT类型描述
-	natDesc := getNATDescription(nat)
-	fmt.Fprintf(w, "\x1b[32m%s\x1b[0m\t\x1b[32m%s\x1b[0m\n", "NAT类型描述", natDesc)
+	w.Flush()
 }
 
 // getNATDescription 根据NAT类型返回相应的描述信息
