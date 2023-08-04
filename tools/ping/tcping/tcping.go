@@ -1,4 +1,4 @@
-package tcping
+package TCPing
 
 import (
 	"context"
@@ -203,7 +203,7 @@ func max(values []float64) float64 {
 	return maxValue
 }
 
-func main() {
+func TCPing() {
 	if len(os.Args) < 3 {
 		fmt.Println("用法: tcping <target_nane> <port> [-4] [-6] [-n count] [-t] [-w timeout] [-i TTL] [-d DNS_server]")
 		fmt.Println("")

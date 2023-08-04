@@ -1,4 +1,4 @@
-package main
+package SpeedTest
 
 import (
 	"fmt"
@@ -14,7 +14,7 @@ type Server struct {
 	Ping float64 `json:"ping"`
 }
 
-func main() {
+func SpeedTest() {
 	fmt.Println("正在获取服务器列表...")
 	servers, err := getServerList()
 	if err != nil {
