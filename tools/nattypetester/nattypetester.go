@@ -33,6 +33,7 @@ func main() {
 	table.SetColumnSeparator("")
 	table.SetRowSeparator("")
 	table.SetCenterSeparator("")
+	table.SetAlignment(tablewriter.ALIGN_LEFT)
 
 	// 打印测试结果
 	table.Append([]string{"NAT类型", fmt.Sprintf("%s", nat)})
