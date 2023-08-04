@@ -10,25 +10,25 @@ import (
 func main() {
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
-		log.Fatalf("failed to initialize gocui: %v", err)
+		log.Fatalf("初始化 gocui 失败：%v", err)
 	}
 	defer g.Close()
 
 	g.SetManagerFunc(layout)
 
 	if err := keybindings(g); err != nil {
-		log.Fatalf("failed to set keybindings: %v", err)
+		log.Fatalf("设置按键绑定失败：%v", err)
 	}
 
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
-		log.Fatalf("gocui main loop error: %v", err)
+		log.Fatalf("gocui 主循环错误：%v", err)
 	}
 }
 
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
 
-	// Create a new view for the title
+	// 创建标题视图
 	if v, err := g.SetView("title", maxX/2-10, 0, maxX/2+10, 3); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
@@ -37,8 +37,8 @@ func layout(g *gocui.Gui) error {
 		v.Wrap = true
 	}
 
-	// Create buttons
-	buttons := []string{"Button 1", "Button 2", "Button 3"}
+	// 创建按钮
+	buttons := []string{"按钮1", "按钮2", "按钮3"}
 	for i, btn := range buttons {
 		if v, err := g.SetView(fmt.Sprintf("btn%d", i+1), maxX/2-10, (i+1)*4, maxX/2+10, (i+1)*4+3); err != nil {
 			if err != gocui.ErrUnknownView {
@@ -54,7 +54,7 @@ func layout(g *gocui.Gui) error {
 }
 
 func keybindings(g *gocui.Gui) error {
-	// Quit the application when pressing "q" or "Ctrl+C"
+	// 当按下 "q" 键或 "Ctrl+C" 时退出程序
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		return err
 	}
