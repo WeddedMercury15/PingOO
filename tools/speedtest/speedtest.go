@@ -44,13 +44,13 @@ func main() {
 }
 
 func getServerList() ([]Server, error) {
-	client, err := speedtest.NewDefaultClient()
+	client, err := speedtest.NewClient(speedtest.DefaultConfig())
 	if err != nil {
 		return nil, err
 	}
 
 	// 获取服务器列表
-	servers, err := client.GetServers()
+	servers, err := client.AllServers()
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func getServerList() ([]Server, error) {
 		serverList = append(serverList, Server{
 			URL:  s.URL,
 			Name: s.Name,
-			Ping: s.Latency.Seconds() * 1000,
+			Ping: s.Latency.Milliseconds(),
 		})
 	}
 
@@ -83,7 +83,7 @@ func chooseFastestServer(servers []Server) *Server {
 }
 
 func runSpeedTest(serverURL string) (float64, float64, error) {
-	client, err := speedtest.NewDefaultClient()
+	client, err := speedtest.NewClient(speedtest.DefaultConfig())
 	if err != nil {
 		return 0, 0, err
 	}
@@ -103,5 +103,5 @@ func runSpeedTest(serverURL string) (float64, float64, error) {
 		return 0, 0, err
 	}
 
-	return downloadSpeed.MegabitsPerSecond, uploadSpeed.MegabitsPerSecond, nil
+	return downloadSpeed.Megabits, uploadSpeed.Megabits, nil
 }
