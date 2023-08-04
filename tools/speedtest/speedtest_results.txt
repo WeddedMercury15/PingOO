@@ -6,3 +6,102 @@
 2023-07-30 17:38:01, 下载速度：499.70 Mbps, 上传速度：230.74 Mbps, Ping：0.00 ms
 2023-07-30 17:52:00, 下载速度：513.81 Mbps, 上传速度：238.96 Mbps, Ping：0.00 ms
 2023-07-30 18:30:09, 下载速度：477.35 Mbps, 上传速度：224.23 Mbps, Ping：0.00 ms
+package main
+
+import (
+    "fmt"
+    "sync"
+
+    "github.com/eiannone/keyboard"
+    "github.com/showwin/speedtest-go/speedtest"
+)
+
+func main() {
+    err := keyboard.Open()
+    if err != nil {
+        panic(err)
+    }
+    defer keyboard.Close()
+
+    var speedtestClient = speedtest.New()
+    serverList, _ := speedtestClient.FetchServers()
+    targets, _ := serverList.FindServer([]int{})
+
+    menuItems := []string{"测试下载速度", "测试上传速度", "测试延迟", "测试丢包率", "测试带宽稳定性", "退出"}
+    selectedIndex := 0
+
+    for {
+        fmt.Println("选择一个选项:")
+        for i, item := range menuItems {
+            if i == selectedIndex {
+                fmt.Printf("-> %s\n", item)
+            } else {
+                fmt.Printf("   %s\n", item)
+            }
+        }
+
+        char, key, err := keyboard.GetKey()
+        if err != nil {
+            panic(err)
+        }
+
+        switch key {
+        case keyboard.KeyArrowUp:
+            if selectedIndex > 0 {
+                selectedIndex--
+            }
+        case keyboard.KeyArrowDown:
+            if selectedIndex < len(menuItems)-1 {
+                selectedIndex++
+            }
+        case keyboard.KeyEnter:
+            switch selectedIndex {
+            case 0:
+                runTest(targets, func(s *speedtest.Server) {
+                    s.PingTest(nil)
+                    s.DownloadTest()
+                    fmt.Printf("从 %s 下载速度: %.2f Mbps\n", s.Name, s.DLSpeed)
+                })
+            case 1:
+                runTest(targets, func(s *speedtest.Server) {
+                    s.PingTest(nil)
+                    s.UploadTest()
+                    fmt.Printf("从 %s 上传速度: %.2f Mbps\n", s.Name, s.ULSpeed)
+                })
+            case 2:
+                runTest(targets, func(s *speedtest.Server) {
+                    s.PingTest(nil)
+                    fmt.Printf("从 %s 延迟: %d ms\n", s.Name, s.Latency)
+                })
+            case 3:
+                runTest(targets, func(s *speedtest.Server) {
+                    s.PacketLossTest()
+                    fmt.Printf("从 %s 丢包率: %.2f%%\n", s.Name, s.PacketLoss)
+                })
+            case 4:
+                runTest(targets, func(s *speedtest.Server) {
+                    s.BandwidthStabilityTest()
+                    fmt.Printf("从 %s 带宽稳定性: %.2f%%\n", s.Name, s.BandwidthStability)
+                })
+            case 5:
+                return
+            default:
+                fmt.Println("无效的选项")
+            }
+        default:
+            fmt.Printf("您按下了 %q 键\n", char)
+        }
+    }
+}
+
+func runTest(servers []*speedtest.Server, testFunc func(*speedtest.Server)) {
+    var wg sync.WaitGroup
+    wg.Add(len(servers))
+    for _, s := range servers {
+        go func(server *speedtest.Server) {
+            defer wg.Done()
+            testFunc(server)
+        }(s)
+    }
+    wg.Wait()
+}
